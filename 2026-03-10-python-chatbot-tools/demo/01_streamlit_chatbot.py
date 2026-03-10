@@ -5,7 +5,7 @@ Streamlit 챗봇 데모
 접속 URL:  http://localhost:8501
 
 이 데모는 Streamlit의 채팅 컴포넌트를 사용하여
-OpenAI GPT-4o와 대화하는 챗봇을 구현합니다.
+Claude Haiku와 대화하는 챗봇을 구현합니다.
 
 핵심 컴포넌트:
 - st.chat_message(): 채팅 버블 컨테이너
@@ -22,17 +22,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ─── 설정 ───────────────────────────────────────────────────────────
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
 USE_MOCK = os.getenv("USE_MOCK", "false").lower() == "true"
 
-# ─── OpenAI 클라이언트 초기화 ─────────────────────────────────────
+# ─── Anthropic 클라이언트 초기화 ─────────────────────────────────────
 if not USE_MOCK:
-    from openai import OpenAI
-    api_key = os.getenv("OPENAI_API_KEY")
+    import anthropic
+    api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
-        st.error("OPENAI_API_KEY 환경변수를 설정해주세요. .env 파일을 확인하세요.")
+        st.error("ANTHROPIC_API_KEY 환경변수를 설정해주세요. .env 파일을 확인하세요.")
         st.stop()
-    client = OpenAI(api_key=api_key)
+    client = anthropic.Anthropic(api_key=api_key)
 
 
 def get_mock_response(messages: list[dict]) -> str:
@@ -51,17 +51,16 @@ def stream_mock_response(text: str):
         time.sleep(0.03)  # 타이핑 효과를 위한 지연
 
 
-def stream_openai_response(messages: list[dict]):
-    """OpenAI API 스트리밍 응답 제너레이터"""
-    stream = client.chat.completions.create(
+def stream_claude_response(messages: list[dict], system_prompt: str):
+    """Claude API 스트리밍 응답 제너레이터"""
+    with client.messages.stream(
         model=MODEL,
-        messages=messages,
-        stream=True,
-    )
-    for chunk in stream:
-        content = chunk.choices[0].delta.content
-        if content is not None:
-            yield content
+        max_tokens=1024,
+        system=system_prompt,
+        messages=[m for m in messages if m["role"] != "system"],
+    ) as stream:
+        for text in stream.text_stream:
+            yield text
 
 
 # ─── 페이지 설정 ──────────────────────────────────────────────────
@@ -97,16 +96,10 @@ with st.sidebar:
 
 # ─── 세션 상태 초기화 ────────────────────────────────────────────
 if "messages" not in st.session_state:
-    # 초기 시스템 메시지 설정
-    st.session_state.messages = [
-        {"role": "system", "content": system_prompt}
-    ]
+    st.session_state.messages = []
 
 # ─── 기존 메시지 렌더링 ───────────────────────────────────────────
 for message in st.session_state.messages:
-    # 시스템 메시지는 화면에 표시하지 않음
-    if message["role"] == "system":
-        continue
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
@@ -121,18 +114,15 @@ if prompt := st.chat_input("메시지를 입력하세요..."):
 
     # 어시스턴트 응답 생성 및 스트리밍 표시
     with st.chat_message("assistant"):
-        # API 메시지: 시스템 프롬프트 + 대화 히스토리
-        api_messages = [{"role": "system", "content": system_prompt}] + [
-            m for m in st.session_state.messages if m["role"] != "system"
-        ]
-
         if USE_MOCK:
             # 목 모드: 에코 응답
-            mock_text = get_mock_response(api_messages)
+            mock_text = get_mock_response(st.session_state.messages)
             response = st.write_stream(stream_mock_response(mock_text))
         else:
-            # 실제 OpenAI API 스트리밍 응답
-            response = st.write_stream(stream_openai_response(api_messages))
+            # 실제 Claude API 스트리밍 응답
+            response = st.write_stream(
+                stream_claude_response(st.session_state.messages, system_prompt)
+            )
 
     # 어시스턴트 응답을 히스토리에 추가
     st.session_state.messages.append({"role": "assistant", "content": response})

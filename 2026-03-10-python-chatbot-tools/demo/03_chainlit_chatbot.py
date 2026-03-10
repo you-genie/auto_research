@@ -26,17 +26,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ─── 설정 ───────────────────────────────────────────────────────────
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
 USE_MOCK = os.getenv("USE_MOCK", "false").lower() == "true"
 SYSTEM_PROMPT = "당신은 도움이 되는 AI 어시스턴트입니다. 한국어로 답변해주세요."
 
-# ─── OpenAI 클라이언트 초기화 ─────────────────────────────────────
+# ─── Anthropic 클라이언트 초기화 ─────────────────────────────────────
 if not USE_MOCK:
-    from openai import AsyncOpenAI
-    api_key = os.getenv("OPENAI_API_KEY")
+    import anthropic
+    api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
-        raise ValueError("OPENAI_API_KEY 환경변수를 설정해주세요.")
-    client = AsyncOpenAI(api_key=api_key)
+        raise ValueError("ANTHROPIC_API_KEY 환경변수를 설정해주세요.")
+    client = anthropic.AsyncAnthropic(api_key=api_key)
 
 
 # ─── 채팅 시작 이벤트 ─────────────────────────────────────────────
@@ -47,10 +47,8 @@ async def on_chat_start():
     - 대화 히스토리 초기화
     - 환영 메시지 전송
     """
-    # 사용자별 세션에 대화 히스토리 저장
-    cl.user_session.set("history", [
-        {"role": "system", "content": SYSTEM_PROMPT}
-    ])
+    # 사용자별 세션에 대화 히스토리 저장 (system 메시지는 별도 관리)
+    cl.user_session.set("history", [])
 
     # 환영 메시지 전송
     await cl.Message(
@@ -66,11 +64,8 @@ async def on_message(message: cl.Message):
     """
     사용자 메시지를 받을 때마다 실행됩니다.
     - 히스토리에 사용자 메시지 추가
-    - LLM API 호출 (스트리밍)
+    - Claude API 호출 (스트리밍)
     - 응답을 히스토리에 추가
-
-    Args:
-        message: Chainlit Message 객체 (message.content로 텍스트 접근)
     """
     # 세션에서 대화 히스토리 가져오기
     history: list[dict] = cl.user_session.get("history")
@@ -88,18 +83,15 @@ async def on_message(message: cl.Message):
             await response_msg.stream_token(char)
             time.sleep(0.02)
     else:
-        # 실제 OpenAI API 스트리밍 호출
-        stream = await client.chat.completions.create(
+        # 실제 Claude API 스트리밍 호출
+        async with client.messages.stream(
             model=MODEL,
+            max_tokens=1024,
+            system=SYSTEM_PROMPT,
             messages=history,
-            stream=True,
-        )
-
-        # 스트리밍 토큰 처리
-        async for chunk in stream:
-            token = chunk.choices[0].delta.content
-            if token:
-                await response_msg.stream_token(token)
+        ) as stream:
+            async for text in stream.text_stream:
+                await response_msg.stream_token(text)
 
     # 최종 메시지 업데이트 (스트리밍 완료 후)
     await response_msg.update()
@@ -114,21 +106,4 @@ async def on_message(message: cl.Message):
 async def on_chat_end():
     """채팅 세션이 종료될 때 실행됩니다."""
     history = cl.user_session.get("history", [])
-    # 실제 앱에서는 여기서 대화 로그를 DB에 저장할 수 있습니다
     print(f"세션 종료. 총 {len(history)} 개의 메시지가 있었습니다.")
-
-
-# ─── 참고: Chainlit 설정 ─────────────────────────────────────────
-# chainlit.toml 파일로 테마, 로고, 이름 등을 커스터마이징할 수 있습니다:
-#
-# [project]
-# name = "나의 챗봇"
-# description = "GPT-4o 기반 챗봇"
-#
-# [UI]
-# name = "AI 어시스턴트"
-# default_theme = "dark"
-#
-# [features]
-# prompt_playground = true
-# speech_to_text.enabled = true

@@ -26,15 +26,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ─── 설정 ───────────────────────────────────────────────────────────
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
 USE_MOCK = os.getenv("USE_MOCK", "false").lower() == "true"
 SYSTEM_PROMPT = "당신은 도움이 되는 AI 어시스턴트입니다. 한국어로 답변해주세요."
 
-# ─── OpenAI 클라이언트 ───────────────────────────────────────────
+# ─── Anthropic 클라이언트 ───────────────────────────────────────────
 if not USE_MOCK:
-    from openai import OpenAI
-    api_key = os.getenv("OPENAI_API_KEY")
-    client = OpenAI(api_key=api_key) if api_key else None
+    import anthropic
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    client = anthropic.Anthropic(api_key=api_key) if api_key else None
 
 
 # ─── 메시지 데이터 모델 ──────────────────────────────────────────
@@ -63,11 +63,6 @@ class ChatState(rx.State):
     async def send_message(self):
         """
         사용자 메시지를 전송하고 AI 응답을 받는 이벤트 핸들러.
-
-        yield를 사용하여 UI를 중간에 업데이트합니다:
-        1. 사용자 메시지 즉시 표시
-        2. 로딩 상태 표시
-        3. AI 응답 스트리밍
         """
         # 빈 입력 무시
         user_text = self.current_input.strip()
@@ -85,49 +80,42 @@ class ChatState(rx.State):
 
         try:
             if USE_MOCK:
-                # 목 모드: 타이핑 효과
                 mock_response = (
                     f"[목 응답] '{user_text}'를 받았습니다! "
                     "Reflex는 파이썬만으로 풀스택 웹앱을 만들 수 있는 프레임워크입니다."
                 )
-                # 어시스턴트 메시지 추가 (빈 내용으로 시작)
                 self.messages.append(Message(role="assistant", content=""))
                 yield
 
-                # 타이핑 효과 시뮬레이션
                 for char in mock_response:
                     self.messages[-1].content += char
                     time.sleep(0.02)
                     yield
             else:
                 if not client:
-                    raise ValueError("OPENAI_API_KEY가 설정되지 않았습니다.")
+                    raise ValueError("ANTHROPIC_API_KEY가 설정되지 않았습니다.")
 
                 # API 메시지 구성
-                api_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-                for msg in self.messages[:-1]:  # 마지막 사용자 메시지 제외 (이미 추가했으므로)
+                api_messages = []
+                for msg in self.messages:
                     api_messages.append({"role": msg.role, "content": msg.content})
-                api_messages.append({"role": "user", "content": user_text})
 
                 # 어시스턴트 응답 메시지 추가 (빈 내용으로 시작)
                 self.messages.append(Message(role="assistant", content=""))
                 yield
 
-                # OpenAI 스트리밍 응답
-                stream = client.chat.completions.create(
+                # Claude 스트리밍 응답
+                with client.messages.stream(
                     model=MODEL,
+                    max_tokens=1024,
+                    system=SYSTEM_PROMPT,
                     messages=api_messages,
-                    stream=True,
-                )
-
-                for chunk in stream:
-                    content = chunk.choices[0].delta.content
-                    if content:
-                        self.messages[-1].content += content
+                ) as stream:
+                    for text in stream.text_stream:
+                        self.messages[-1].content += text
                         yield  # 토큰마다 UI 업데이트
 
         except Exception as e:
-            # 오류 처리
             self.error_msg = f"오류가 발생했습니다: {str(e)}"
             if self.messages and self.messages[-1].role == "assistant":
                 self.messages[-1].content = f"[오류] {str(e)}"
@@ -149,27 +137,18 @@ class ChatState(rx.State):
 
 # ─── UI 컴포넌트 ─────────────────────────────────────────────────
 def message_bubble(message: Message) -> rx.Component:
-    """
-    개별 채팅 메시지 버블 컴포넌트.
-
-    Args:
-        message: Message 데이터 객체
-    Returns:
-        rx.Component: 렌더링된 메시지 컴포넌트
-    """
+    """개별 채팅 메시지 버블 컴포넌트."""
     is_user = message.role == "user"
 
     return rx.box(
         rx.hstack(
-            # 아바타
             rx.box(
                 rx.text("👤" if is_user else "🤖"),
                 min_width="40px",
                 text_align="center",
             ),
-            # 메시지 내용
             rx.box(
-                rx.markdown(message.content),  # 마크다운 렌더링
+                rx.markdown(message.content),
                 background_color="#DCF8C6" if is_user else "#FFFFFF",
                 border_radius="12px",
                 padding="12px 16px",
@@ -187,7 +166,6 @@ def message_bubble(message: Message) -> rx.Component:
 def chat_area() -> rx.Component:
     """채팅 메시지 영역 컴포넌트"""
     return rx.vstack(
-        # 메시지가 없을 때 안내 메시지
         rx.cond(
             ~ChatState.has_messages,
             rx.center(
@@ -204,9 +182,7 @@ def chat_area() -> rx.Component:
                 height="300px",
             ),
         ),
-        # 메시지 목록 (rx.foreach: 반응형 리스트 렌더링)
         rx.foreach(ChatState.messages, message_bubble),
-        # 로딩 인디케이터
         rx.cond(
             ChatState.is_loading,
             rx.hstack(
@@ -229,7 +205,6 @@ def input_area() -> rx.Component:
             placeholder="메시지를 입력하세요... (Shift+Enter: 줄바꿈, Enter: 전송)",
             value=ChatState.current_input,
             on_change=ChatState.set_input,
-            # Enter 키로 전송 (Shift+Enter는 줄바꿈)
             on_key_down=rx.cond(
                 rx.Var.create("event.key === 'Enter' && !event.shiftKey"),
                 ChatState.send_message,
@@ -250,7 +225,7 @@ def input_area() -> rx.Component:
             disabled=ChatState.is_loading,
             color_scheme="blue",
             size="3",
-            height="72px",  # textarea와 높이 맞춤
+            height="72px",
         ),
         width="100%",
         align_items="flex-end",
@@ -262,7 +237,6 @@ def chat_app() -> rx.Component:
     """메인 앱 컴포넌트"""
     return rx.center(
         rx.vstack(
-            # 헤더
             rx.hstack(
                 rx.heading("Reflex 챗봇 데모", size="6"),
                 rx.spacer(),
@@ -280,7 +254,6 @@ def chat_app() -> rx.Component:
                 align_items="center",
             ),
             rx.divider(),
-            # 오류 메시지 표시
             rx.cond(
                 ChatState.error_msg != "",
                 rx.callout(
@@ -290,18 +263,15 @@ def chat_app() -> rx.Component:
                     width="100%",
                 ),
             ),
-            # 채팅 영역 (스크롤 가능)
             rx.scroll_area(
                 chat_area(),
                 height="500px",
                 type="auto",
                 width="100%",
-                id="chat-scroll",  # JavaScript에서 참조 가능
+                id="chat-scroll",
             ),
             rx.divider(),
-            # 입력 영역
             input_area(),
-            # 안내 텍스트
             rx.text(
                 "Enter: 전송 | Shift+Enter: 줄바꿈",
                 color="#999",

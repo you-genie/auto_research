@@ -11,15 +11,9 @@ Mesop 챗봇 데모
 - mesop.labs.chat: 내장 채팅 컴포넌트
 - @me.page: 페이지 정의 데코레이터
 - 선언형 UI 패턴
-
-주요 특징:
-- 핫 리로드: 코드 저장 시 브라우저 자동 새로고침
-- Angular Material 기반 컴포넌트
-- Google Gemini와의 자연스러운 통합
 """
 
 import os
-import time
 import mesop as me
 import mesop.labs as mel
 from dotenv import load_dotenv
@@ -28,16 +22,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ─── 설정 ───────────────────────────────────────────────────────────
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
 USE_MOCK = os.getenv("USE_MOCK", "false").lower() == "true"
 
-# ─── OpenAI 클라이언트 초기화 ─────────────────────────────────────
+# ─── Anthropic 클라이언트 초기화 ─────────────────────────────────────
 if not USE_MOCK:
-    from openai import OpenAI
-    api_key = os.getenv("OPENAI_API_KEY")
+    import anthropic
+    api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
-        raise ValueError("OPENAI_API_KEY 환경변수를 설정해주세요.")
-    client = OpenAI(api_key=api_key)
+        raise ValueError("ANTHROPIC_API_KEY 환경변수를 설정해주세요.")
+    client = anthropic.Anthropic(api_key=api_key)
 
 
 def transform(
@@ -46,55 +40,32 @@ def transform(
 ) -> str:
     """
     Mesop mel.chat 컴포넌트의 transform 콜백 함수.
-
-    사용자 입력과 대화 히스토리를 받아 AI 응답을 반환합니다.
-    제너레이터(yield)를 사용하면 스트리밍이 가능합니다.
-
-    Args:
-        input_text: 사용자가 입력한 텍스트
-        history: mel.ChatMessage 객체 리스트
-                 (각 객체는 .role, .content 속성 보유)
-    Returns:
-        str 또는 제너레이터: AI 응답
     """
     if USE_MOCK:
-        # 목 모드: 타이핑 효과 시뮬레이션
         response = (
             f"[목 응답] '{input_text}'를 받았습니다! "
             "Mesop은 Google이 내부적으로 사용하는 Python UI 프레임워크입니다."
         )
         return response
 
-    # OpenAI API 메시지 형식으로 변환
-    messages = [
-        {"role": "system", "content": "당신은 도움이 되는 AI 어시스턴트입니다. 한국어로 답변해주세요."}
-    ]
-
-    # 대화 히스토리 변환
+    # Claude API 메시지 형식으로 변환
+    messages = []
     for msg in history:
         messages.append({
             "role": msg.role,
             "content": msg.content,
         })
-
-    # 현재 사용자 입력 추가
     messages.append({"role": "user", "content": input_text})
 
-    # OpenAI API 호출 (스트리밍)
-    stream = client.chat.completions.create(
+    # Claude API 호출
+    response = client.messages.create(
         model=MODEL,
+        max_tokens=1024,
+        system="당신은 도움이 되는 AI 어시스턴트입니다. 한국어로 답변해주세요.",
         messages=messages,
-        stream=True,
     )
 
-    # 스트리밍 응답 처리
-    response = ""
-    for chunk in stream:
-        content = chunk.choices[0].delta.content
-        if content:
-            response += content
-
-    return response
+    return response.content[0].text
 
 
 # ─── Mesop 페이지 정의 ───────────────────────────────────────────
@@ -106,11 +77,7 @@ def transform(
     ),
 )
 def app():
-    """
-    메인 앱 페이지.
-    mel.chat 컴포넌트가 모든 채팅 UI를 자동으로 처리합니다.
-    """
-    # 상단 헤더
+    """메인 앱 페이지."""
     with me.box(
         style=me.Style(
             background="#f0f4f8",
@@ -128,7 +95,6 @@ def app():
             style=me.Style(color="#666", font_size=14),
         )
 
-    # mel.chat: 완전한 채팅 UI를 단 한 줄로 생성
     mel.chat(
         transform=transform,
         title="AI 어시스턴트",
@@ -136,7 +102,6 @@ def app():
     )
 
 
-# ─── 추가 페이지: 정보 페이지 ────────────────────────────────────
 @me.page(path="/about", title="Mesop 정보")
 def about_page():
     """Mesop 프레임워크 소개 페이지"""
@@ -152,8 +117,6 @@ def about_page():
 
 
 if __name__ == "__main__":
-    # mesop 06_mesop_chatbot.py 명령으로 실행하세요
-    # python으로 직접 실행 시 아래와 같이 안내
     print("Mesop 앱은 다음 명령어로 실행해주세요:")
     print("  mesop 06_mesop_chatbot.py")
     print("\n브라우저에서 http://localhost:32123 접속")

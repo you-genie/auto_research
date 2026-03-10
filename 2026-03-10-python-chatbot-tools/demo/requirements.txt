@@ -2,7 +2,7 @@
 # Python 3.10+ 권장
 
 # ─── LLM API 클라이언트 ───────────────────────────────
-openai>=1.30.0          # OpenAI API 클라이언트
+anthropic>=0.40.0       # Anthropic Claude API 클라이언트
 
 # ─── 환경변수 관리 ───────────────────────────────────
 python-dotenv>=1.0.0    # .env 파일 로드
