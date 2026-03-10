@@ -1,0 +1,7 @@
+# Claude Code 에이전트 팀 데모 의존성
+
+# Claude Agent SDK (메인 SDK)
+claude-agent-sdk>=0.1.0
+
+# 개발 도구 (선택 사항)
+python-dotenv>=1.0.0   # .env 파일로 API 키 관리
