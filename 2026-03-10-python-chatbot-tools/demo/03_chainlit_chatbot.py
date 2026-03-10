@@ -35,7 +35,7 @@ if not USE_MOCK:
     from langchain_anthropic import ChatAnthropic
     from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
     from langchain_core.runnables.history import RunnableWithMessageHistory
-    from langchain_community.chat_message_histories import ChatMessageHistory
+    from langchain_core.chat_history import InMemoryChatMessageHistory as ChatMessageHistory
 
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
@@ -78,19 +78,9 @@ if not USE_MOCK:
 # ─── 채팅 시작 이벤트 ─────────────────────────────────────────────
 @cl.on_chat_start
 async def on_chat_start():
-    """
-    새 채팅 세션이 시작될 때 실행됩니다.
-    - 세션 ID 저장
-    - 환영 메시지 전송
-    """
+    """새 채팅 세션이 시작될 때 세션 ID를 설정합니다."""
     session_id = cl.user_session.get("id")
     cl.user_session.set("session_id", session_id)
-
-    await cl.Message(
-        content=f"안녕하세요! 저는 LangChain + {MODEL} 기반 AI 어시스턴트입니다. 무엇이든 물어보세요!\n\n"
-                f"목 모드: {'켜짐 (실제 API 미호출)' if USE_MOCK else '꺼짐 (실제 API 사용)'}",
-        author="시스템",
-    ).send()
 
 
 # ─── 메시지 수신 이벤트 ─────────────────────────────────────────
