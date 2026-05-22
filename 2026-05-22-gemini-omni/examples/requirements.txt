@@ -1,0 +1,5 @@
+# Gemini Omni Flash 예제 코드 의존성
+# 공식 API 미출시 (2026-05-22 기준) — 출시 후 버전 확인 필요
+
+google-generativeai>=0.8.0
+pillow>=10.0.0         # 이미지 전처리 (선택)
