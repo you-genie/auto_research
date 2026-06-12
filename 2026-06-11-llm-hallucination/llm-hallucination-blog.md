@@ -7,6 +7,8 @@ category: AI Safety & Alignment
 
 # LLM 환각(Hallucination) 완전 정복: 완화 기법부터 대기업 프로덕션 방안까지 (2025~2026)
 
+> 📊 **발표자료**: [llm-hallucination-presentation.pptx](./llm-hallucination-presentation.pptx)
+
 LLM이 자신 있게 틀린 말을 내뱉는 문제, 즉 환각(hallucination)은 2026년 현재도 완전히 해결되지 않았다. 이 글은 환각의 정의와 원인, 분류 체계, 완화 기법, 측정 방법, 그리고 대기업들이 프로덕션에서 실제로 적용 중인 방안까지 2025~2026 최신 연구를 기준으로 정리한다.
 
 **3줄 요약:**
@@ -247,3 +249,97 @@ AUROC **0.790**으로 완벽하진 않지만, 별도 레이블 데이터 없이 
 26. [Hallucination in RAG — arXiv:2401.11817](https://arxiv.org/abs/2401.11817)
 27. [Why LLMs Hallucinate — OpenAI](https://openai.com/index/why-language-models-hallucinate/)
 28. [Mitigation Limits — arXiv:2411.16594](https://arxiv.org/pdf/2411.16594)
+
+---
+
+## 📝 학습 퀴즈
+
+지금까지 읽은 내용, 얼마나 기억나는지 가볍게 점검해 보세요. 답을 먼저 생각해 본 다음 "정답 보기"를 눌러 확인하면 돼요.
+
+**Q1. 환각(hallucination)과 factuality(사실성)는 같은 개념일까요? 환각의 정의를 떠올리며 답해 보세요.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 다른 개념이에요. 환각은 "사실처럼 들리지만 근거가 없거나 입력 문맥과 모순되는 내용을 생성하는 현상"이고, factuality는 출력이 세계의 사실과 일치하는지를 따지는 개념이에요.
+
+**해설**: 환각은 단순히 "틀린 정보"가 아니라 근거 없이 그럴듯하게 지어내는 행동 자체를 가리키는 거예요. 언어 모델은 검증된 사실을 조회하는 게 아니라 패턴으로 다음 토큰을 예측하기 때문에, 정보가 없으면 그럴듯한 내용으로 빈칸을 채우게 되죠.
+
+</details>
+
+**Q2. (OX) 환각은 RAG, 추론, 검증 레이어를 충분히 겹쳐 쌓으면 완전히 제거할 수 있다.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X예요.
+
+**해설**: 이 글 전체를 관통하는 결론이 바로 "환각은 불가피(inevitable)하지만 완화는 가능(mitigable)하다"는 거였죠. 완전 제거는 현재 기술로 불가능하고, 여러 레이어에 방어선을 두어 프로덕션 수준에서 **관리**하는 것이 현실적인 목표예요.
+
+</details>
+
+**Q3. 컨텍스트 기준 분류에서 Extrinsic 환각과 Intrinsic 환각은 어떻게 다를까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Extrinsic은 주어진 문서에 **없는** 정보를 지어내는 것이고, Intrinsic은 주어진 문서와 **모순되는** 내용을 생성하는 거예요.
+
+**해설**: Extrinsic은 요약이나 RAG에서 특히 문제가 되고, Intrinsic은 입력과 대조하면 검출이 가능하다는 차이가 있어요. 어떤 축의 환각이냐에 따라 효과적인 완화 기법이 달라지기 때문에, 이 분류는 대응 전략 선택의 출발점이 되죠.
+
+</details>
+
+**Q4. RAG는 가장 널리 쓰이는 환각 완화 기법인데요, RAG가 오히려 환각을 유발할 수 있는 경우는 어떤 경우일까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 검색 단계에서 잘못된 문서를 가져오면 그 잘못된 근거가 오히려 환각을 유발해요. 또 모델이 검색 결과를 무시하고 파라미터 지식에 의존하는 실패 경로도 있어요.
+
+**해설**: RAG는 사실 지식을 모델 파라미터 밖으로 빼내는 효과가 있어서 환각을 줄여주지만, 제거하지는 못해요. 추론 체인도 마찬가지로 중간 단계 하나가 틀리면 오류가 최종 답까지 전파되니, 완화 기법이 새 환각을 만들 수 있다는 점을 늘 염두에 둬야 하죠.
+
+</details>
+
+**Q5. SimpleQA 벤치마크가 채점을 correct / incorrect 2분류가 아니라 not_attempted까지 3분류로 나눈 이유는 뭘까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 틀리게 답하는 것과 "모른다"고 인정하는 것은 완전히 다른 행동이라서예요. 이 둘을 구분해야 calibration(불확실성 표현) 개선을 측정할 수 있어요.
+
+**해설**: 환각의 핵심 원인 중 하나가 모델에 "모른다"고 말하는 메커니즘이 내장되어 있지 않다는 점이었죠. 그래서 모른다고 인정하는 행동을 별도 판정으로 분리해야, 모델이 얼마나 정직하게 불확실성을 표현하는지 따로 평가할 수 있는 거예요.
+
+</details>
+
+**Q6. (OX) 현재 최고 성능 모델은 에이전트 환각이 발생했다는 사실뿐 아니라 어느 단계에서 왜 발생했는지도 높은 정확도로 짚어낼 수 있다.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X예요.
+
+**해설**: AgentHallu 벤치마크에서 최고 성능 모델(GPT-5)조차 환각 귀인(attribution) 정확도가 41.1%에 그쳤어요. 환각이 발생했다는 걸 아는 것과 발생 지점·원인을 짚어내는 건 전혀 다른 문제이고, 후자는 아직 미해결 과제로 남아 있죠.
+
+</details>
+
+**Q7. AWS, Google, Microsoft, Anthropic 같은 대기업들의 프로덕션 환각 대응 방안은 공통적으로 어떤 방향으로 수렴했나요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: "출력을 근거 문서에 묶는(grounding)" 방향이에요. 묶이지 않은 출력은 탐지하고 차단하는 식이죠.
+
+**해설**: AWS Bedrock의 Contextual Grounding Check, Google의 Vertex AI Grounding, Azure의 Groundedness Detection, Anthropic의 Citations API가 모두 같은 계열이에요. 다만 이 제품들의 효과 수치는 대부분 벤더 자사 문서 기준이라 독립적인 제3자 검증이 부족하다는 점도 같이 기억해 두면 좋아요.
+
+</details>
+
+**Q8. (응용) 사내 문서 기반 Q&A 챗봇을 RAG로 구축했는데, 답변이 그럴듯해 보여도 가끔 문서에 없는 내용을 지어내는 게 걱정이에요. 본문에서 소개한 방안 중 어떤 것들을 추가로 적용할 수 있을까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: grounding 검증 레이어를 추가하는 게 정석이에요. 예를 들어 Azure Groundedness Detection이나 AWS Contextual Grounding Check로 응답이 소스 문서에 근거하는지 점수화해 임계값 미만이면 차단하고, Anthropic Citations처럼 주장마다 출처를 인용하게 하거나, 별도 검증 에이전트(Validation Agent)를 두는 방법도 있어요.
+
+**해설**: 문서에 없는 내용을 지어내는 건 전형적인 Extrinsic 환각이라서, 출력을 근거 문서와 대조하는 grounding 계열 검증이 잘 맞아요. 핵심은 한 가지 기법에 의존하지 말고 여러 레이어에 방어선을 두고 지속적으로 측정하며 개선하는 거죠.
+
+</details>

@@ -1,5 +1,7 @@
 # 3D Gaussian Splatting 완전 정복: 사진 몇 장으로 포토리얼한 3D 세계를 만드는 기술
 
+> 📊 **발표자료**: [3d-gaussian-splatting-presentation.pptx](./3d-gaussian-splatting-presentation.pptx)
+
 > 작성일: 2026-03-14
 > 난이도: 입문 ~ 중급 (컴퓨터 그래픽스 비전공자 환영)
 
@@ -469,3 +471,97 @@ Gracia AI는 초당 50프레임으로 촬영한 영상을 처리해서 슬로우
 13. [MEGA: Memory-Efficient 4D Gaussian Splatting](https://openaccess.thecvf.com/content/ICCV2025/papers/Zhang_MEGA_Memory-Efficient_4D_Gaussian_Splatting_for_Dynamic_Scenes_ICCV_2025_paper.pdf). ICCV 2025.
 14. [Material-informed Gaussian Splatting for Digital Twin](https://arxiv.org/abs/2511.20348). arXiv 2025.
 15. [VR-Drive: Feed-Forward 3D Gaussian Splatting for Autonomous Driving](https://arxiv.org/abs/2510.23205). arXiv 2025.
+
+---
+
+## 📝 학습 퀴즈
+
+지금까지 읽은 내용, 얼마나 기억나는지 가볍게 점검해 보세요. 답을 먼저 생각해 본 다음 "정답 보기"를 눌러 확인하면 돼요.
+
+**Q1. 래스터화(Rasterization)와 레이 트레이싱(Ray Tracing)의 가장 큰 차이는 뭘까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 래스터화는 3D 물체를 삼각형으로 쪼개 화면에 투영하는 "빠른 근사" 방식이고, 레이 트레이싱은 빛의 경로를 추적해 물리적으로 정확한 반사·굴절·그림자를 계산하는 "느리지만 정확한" 방식이에요.
+
+**해설**: 래스터화는 GPU 병렬 처리에 최적화되어 게임에서 초당 60~120프레임을 뽑아내지만, 빛의 물리 현상 표현이 어색할 수 있어요. 반면 레이 트레이싱은 픽사 영화 같은 사실적인 빛을 만들지만 프레임 하나에 몇 분~몇 시간이 걸려서 렌더 팜이 필요하죠.
+
+</details>
+
+**Q2. (OX) 3D Gaussian Splatting은 NeRF처럼 신경망(Neural Network)에 장면 정보를 저장한다.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X
+
+**해설**: NeRF는 신경망 가중치 안에 3D 공간 정보를 암묵적(implicit)으로 저장하지만, 3DGS는 신경망을 거의 안 써요. 수백만 개의 가우시안 파라미터를 미분 가능한 래스터화를 통해 경사하강법으로 직접 최적화하는 명시적(explicit) 표현 방식이에요.
+
+</details>
+
+**Q3. 3D 가우시안 하나가 가지는 4가지 핵심 속성은 무엇일까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 위치(x, y, z), 공분산 행렬(크기·방향·형태), 색상(RGB + 구면 조화), 불투명도(α)예요.
+
+**해설**: 각 가우시안은 3D 공간에 떠 있는 부드러운 타원형 덩어리라고 생각하면 돼요. 공분산 행렬이 길쭉한지 납작한지를 결정하고, 구면 조화 함수 덕분에 보는 방향에 따라 색이 달라지는 뷰 의존적 색상까지 표현할 수 있죠.
+
+</details>
+
+**Q4. NeRF가 사실상 불가능했던 VR 렌더링이 3DGS로는 가능해진 이유는 뭘까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: NeRF는 느린 볼류메트릭 레이 마칭 방식이라 초당 5프레임 정도에 그치지만, 3DGS는 GPU 래스터화로 렌더링해서 일반 소비자 하드웨어에서도 100FPS 이상을 낼 수 있기 때문이에요.
+
+**해설**: VR 기기는 멀미 없는 경험을 위해 최소 90FPS가 필요한데요. NeRF의 ~5FPS로는 어림도 없었지만, 3DGS는 가우시안을 삼각형 대신 쓰는 래스터화 기반이라 실시간 렌더링이 가능해졌어요.
+
+</details>
+
+**Q5. 3DGS 학습 과정에서 "밀도 조절(densification)"은 어떻게 이루어지나요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 에러가 큰 작은 가우시안은 복제(clone), 에러가 큰 큰 가우시안은 분할(split), 투명도가 낮은 가우시안은 제거(prune)해요.
+
+**해설**: 렌더링 결과와 실제 사진을 비교해 손실을 계산한 뒤, 디테일이 부족한 곳엔 가우시안을 늘리고 쓸모없는 건 정리하는 식으로 반복 최적화하는 거예요. 이렇게 학습이 끝나면 한 장면에 수백만 개의 가우시안이 남게 되죠.
+
+</details>
+
+**Q6. (OX) 4D Gaussian Splatting의 "4D"는 공간 3차원에 색상 차원을 하나 더한 것이다.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X
+
+**해설**: 4D는 공간(X, Y, Z)에 시간(T)을 더한 거예요. 각 가우시안이 시간에 따라 어떻게 움직이는지 학습해서, 사람이 걸어다니거나 물이 흐르는 동적인 장면도 실시간으로 렌더링할 수 있게 됐죠.
+
+</details>
+
+**Q7. (응용) 게임 스튜디오에서 실제 카페 내부를 게임 배경으로 쓰고 싶다고 해요. 3DGS를 쓰면 전통 파이프라인 대비 어떤 작업들이 생략될까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 직접 모델링, UV 언래핑, 리토폴로지(topology 정리), 텍스처 페인팅 같은 작업이 생략돼요. 사진을 여러 각도에서 찍기만 하면 게임 에셋으로 바로 변환할 수 있어요.
+
+**해설**: 전통 방식은 아티스트가 모델링부터 재질 설정까지 일일이 손으로 해야 해서 시간과 비용이 엄청 들었는데요. 3DGS는 현실 조명까지 그대로 캡처되어 자연스러운 재질 효과가 따라온다는 보너스도 있어요. 다만 기존 게임 엔진이 폴리곤 메시 기반이라 통합에는 추가 작업이 필요하다는 점은 기억해 두세요.
+
+</details>
+
+**Q8. 3DGS가 아직 잘 처리하지 못하는 대표적인 한계를 두 가지 이상 말해볼까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 유리·금속 같은 반사/투명 물체 표현, 장면당 수 GB에 달하는 메모리·저장 공간, 카메라를 빠르게 움직일 때의 팝핑 아티팩트, 기존 메시 기반 렌더링 파이프라인과의 호환성 문제 등이 있어요.
+
+**해설**: 3DGS는 레이 트레이싱이 아닌 래스터화 기반이라 복잡한 반사를 물리적으로 정확히 표현하기엔 근본적인 한계가 있어요. 그래도 SPZ 압축 포맷이나 glTF 표준화처럼 이런 문제들을 해결하려는 연구가 빠르게 진행 중이죠.
+
+</details>

@@ -1,5 +1,7 @@
 # Yann LeCun과 World Models 완전 정복: "LLM은 AGI가 아니다"를 외치는 남자의 진짜 비전
 
+> 📊 **발표자료**: [yann-lecun-world-models-presentation.pptx](./yann-lecun-world-models-presentation.pptx)
+
 > "There's absolutely no way that autoregressive LLMs, the type that we know today, will reach human intelligence." — Yann LeCun, CES 2025
 
 솔직히 말하면, AI 업계에서 가장 유명한 '반골'이 있어요. OpenAI가 GPT-4로 세상을 떠들썩하게 만들고, 모두가 LLM 스케일링에 환호할 때 혼자 "그거 틀렸어"를 외치는 사람이죠. 바로 [Yann LeCun](https://en.wikipedia.org/wiki/Yann_LeCun)이에요. 튜링상을 받은 딥러닝의 아버지 중 한 명이 왜 현재 AI의 주류인 LLM을 그토록 강하게 비판하는 걸까요? 그리고 그가 제안하는 대안인 **World Models**는 뭔데요?
@@ -376,3 +378,97 @@ World Models가 정말 AI의 다음 단계인지, 아니면 또 다른 AI 붐의
 13. [Are Autoregressive LLMs Really Doomed? - MarkTechPost](https://www.marktechpost.com/2025/02/11/are-autoregressive-llms-really-doomed-a-commentary-on-yann-lecuns-recent-keynote-at-ai-action-summit/)
 14. [JEPA Deep Dive - Rohit Bandaru](https://rohitbandaru.github.io/blog/JEPA-Deep-Dive/)
 15. [Energy-Based Models - NYU](https://cs.nyu.edu/~yann/research/ebm/)
+
+---
+
+## 📝 학습 퀴즈
+
+지금까지 읽은 내용, 얼마나 기억나는지 가볍게 점검해 보세요. 답을 먼저 생각해 본 다음 "정답 보기"를 눌러 확인하면 돼요.
+
+**Q1. LeCun이 "오토회귀 LLM은 인간 지능에 도달할 수 없다"고 주장하는 핵심 근거 중 하나가 토큰 예측 방식 자체에 있는데요. 어떤 문제일까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 토큰을 하나씩 예측할 때마다 오류 확률이 존재하고, 이 오류가 누적되면 전체 답변이 올바를 확률이 지수적으로 감소한다는 문제예요.
+
+**해설**: 오토회귀 방식은 이전 토큰들을 보고 다음 토큰을 예측하는 구조인데, 각 단계의 오류가 독립적으로 쌓인다면 길게 생성할수록 정답 범위에서 벗어날 가능성이 커지죠. LeCun은 이게 환각(hallucination) 문제의 근원이라고 봐요.
+
+</details>
+
+**Q2. OX 퀴즈: JEPA는 영상의 모든 픽셀을 정확하게 예측하도록 학습하는 생성형 아키텍처다.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X
+
+**해설**: JEPA의 핵심은 픽셀 공간(입력 공간)이 아니라 **표현 공간(representation space)** 에서 예측한다는 거예요. 나무 잎사귀의 흔들림처럼 본질적으로 예측 불가능한 세부 사항까지 다 맞추려 하지 않고, 의미 있는 표현만 예측하니까 훨씬 효율적이고 정확하죠.
+
+</details>
+
+**Q3. LeCun이 LLM의 한계를 설명할 때 자주 쓰는 "집고양이 비유"는 무엇을 지적하기 위한 걸까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: LLM에는 물리적 세계에 대한 인과적 모델(causal model)이 없다는 점이에요. 집고양이도 컵을 치면 떨어진다는 걸 알고 복잡한 행동을 계획할 수 있는데, LLM은 그런 세계 이해가 없다는 거죠.
+
+**해설**: LLM은 텍스트 패턴에서 간접적으로 추론할 뿐, 물리 세계가 어떻게 작동하는지 직접 모델링하지 못해요. LeCun은 이 인과적 세계 이해가 진짜 지능의 핵심이라고 보고, 그래서 World Model이 필요하다고 주장하는 거예요.
+
+</details>
+
+**Q4. JEPA 수식에서 잠재 변수 z는 어떤 역할을 할까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 예측의 불확실성(모호성)을 처리하는 역할이에요.
+
+**해설**: 세상은 "고양이가 왼쪽으로 갈 수도, 오른쪽으로 갈 수도 있다"처럼 미래가 하나로 정해지지 않은 경우가 많은데요. z가 그 여러 가능성 중 어느 쪽인지를 결정해줘서, 모델이 본질적으로 예측 불가능한 상황도 다룰 수 있게 해주죠.
+
+</details>
+
+**Q5. 에너지 기반 모델(EBM)에서 "좋은 상태(타당한 예측)"와 "나쁜 상태(말도 안 되는 예측)"는 에너지 값으로 어떻게 구분될까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 좋은 상태 = 낮은 에너지, 나쁜 상태 = 높은 에너지예요.
+
+**해설**: EBM은 각 변수 구성에 스칼라 에너지 값을 할당하는 모델인데요. 학습은 관찰된 데이터(타당한 구성)의 에너지를 낮추고, 관찰되지 않은 데이터의 에너지를 높이는 방향으로 진행돼요. JEPA의 이론적 기반이 바로 이 EBM이죠.
+
+</details>
+
+**Q6. META의 JEPA 계열(V-JEPA 2)과 Google DeepMind의 Genie 3는 둘 다 World Model이지만 지향점이 좀 다른데요. 어떻게 구분할 수 있을까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: V-JEPA 2는 표현 공간에서 세계를 이해·예측해서 로봇 제어 같은 계획에 활용하는 쪽이고, Genie 3는 텍스트 프롬프트로 실시간 조작 가능한 3D 환경 자체를 생성하는 쪽이에요.
+
+**해설**: V-JEPA 2는 비디오로 사전학습한 뒤 적은 로봇 데이터만으로 행동 계획까지 하는 "이해형" World Model이고요. Genie 3는 720p, 24 FPS 실시간으로 일관된 가상 세계를 만들어내는 "생성형" World Model이에요. Waymo는 이 Genie 3를 기반으로 자율주행 시뮬레이션에 활용하고 있죠.
+
+</details>
+
+**Q7. 응용 시나리오: 자율주행 회사가 "어린이가 갑자기 도로로 뛰어드는 상황" 같은 희귀 사고 데이터를 충분히 모으기 어렵다고 해요. 본문에 따르면 World Model이 이 문제를 어떻게 해결해줄 수 있을까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: World Model로 현실에서 거의 일어나지 않는 희귀 시나리오를 합성(시뮬레이션)해서, 그 데이터로 자율주행 시스템을 안전하게 훈련할 수 있어요.
+
+**해설**: 전통적인 시뮬레이션은 이미 관찰된 것만 재현할 수 있다는 근본적 한계가 있는데요. Waymo World Model은 카메라와 LiDAR 데이터를 동시에 생성하면서 희귀 상황까지 만들어내니까, 실제 데이터에 거의 없는 위험 상황도 충분히 학습시킬 수 있는 거죠.
+
+</details>
+
+**Q8. LeCun의 주장에 대한 반론으로 본문에서 소개된 것 중 하나를 꼽는다면 뭐가 있을까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: OpenAI의 o1/o3 같은 추론 모델이 LeCun이 어렵다고 봤던 수학·코딩·과학 추론에서 놀라운 성능을 보여주고 있다는 점이에요. (그 외에 "지금 당장 가치를 만드는 건 LLM이다", "멀티모달 LLM이 일부 물리 이해를 보여준다"도 정답이에요.)
+
+**해설**: 그래서 본문은 "둘 다 필요한 거 아닐까?"라는 절충안을 제시해요. 실제로 V-JEPA 2를 LLM과 결합했을 때 비디오 QA에서 SOTA 성능이 나왔으니, JEPA가 세계 이해를 맡고 LLM이 언어 처리를 맡는 하이브리드가 현실적인 방향일 수 있다는 거죠.
+
+</details>

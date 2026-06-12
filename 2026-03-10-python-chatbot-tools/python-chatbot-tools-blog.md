@@ -1,5 +1,7 @@
 # 파이썬 챗봇 데모 프레임워크 완전 가이드 2025: Streamlit, Gradio, Chainlit, Reflex, Panel, Mesop, Voilà 비교
 
+> 📊 **발표자료**: [python-chatbot-tools-presentation.md](./python-chatbot-tools-presentation.md)
+
 > "The best framework is the one that removes friction between your idea and your working demo."
 > — AI 개발자 커뮤니티의 공통된 지혜
 
@@ -756,3 +758,97 @@ Mesop   |    Gradio    Voilà
 18. [RAG and Streamlit Chatbot - Analytics Vidhya](https://www.analyticsvidhya.com/blog/2024/04/rag-and-streamlit-chatbot-chat-with-documents-using-llm/)
 19. [Gradio + LiteLLM Tutorial](https://docs.litellm.ai/docs/tutorials/gradio_integration)
 20. [How to build LLM ChatBot with Streamlit - Streamlit Blog](https://blog.streamlit.io/how-to-build-an-llm-powered-chatbot-with-streamlit/)
+
+---
+
+## 📝 학습 퀴즈
+
+지금까지 읽은 내용, 얼마나 기억나는지 가볍게 점검해 보세요. 답을 먼저 생각해 본 다음 "정답 보기"를 눌러 확인하면 돼요.
+
+**Q1. 7개 프레임워크 중 "가장 빠른 프로토타이핑"이 강점이고, Hugging Face Spaces와의 통합이 사실상 표준인 도구는 무엇일까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Gradio
+
+**해설**: Gradio는 Hugging Face가 인수한 라이브러리라서 Spaces 원클릭 배포가 가능하고, `gr.ChatInterface`에 응답 함수 하나만 넘기면 완전한 채팅 UI가 만들어져요. 그래서 본문에서도 "5분 이내 배포 가능한 가장 빠른 프로토타이핑 도구"로 소개했죠.
+
+</details>
+
+**Q2. OX 퀴즈: Streamlit은 사용자가 입력할 때마다 전체 스크립트를 처음부터 다시 실행하는 구조예요. (O/X)**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: O
+
+**해설**: Streamlit은 매 인터랙션마다 스크립트 전체를 재실행하는 독특한 실행 모델을 갖고 있어요. 그래서 채팅 히스토리 같은 상태는 `st.session_state`에 따로 저장해야 하고, 앱이 복잡해지면 상태 관리가 까다로워질 수 있다는 게 단점으로 꼽히죠.
+
+</details>
+
+**Q3. 7개 프레임워크 중 유일하게 OAuth 같은 인증 기능을 기본 내장한 프레임워크는 무엇이고, 어떤 용도에 특화되어 있을까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Chainlit — LLM 챗봇 전용 프레임워크예요.
+
+**해설**: 비교표를 보면 인증 내장 항목에서 Chainlit만 OAuth·비밀번호 인증을 지원해요. 여기에 스트리밍, 파일 업로드, 피드백 버튼, Literal AI 관찰 가능성까지 내장돼 있어서 "채팅 특화 프로덕션 앱"에 추천되죠. 대신 채팅 외 용도로는 부적합하다는 게 트레이드오프예요.
+
+</details>
+
+**Q4. 각 프레임워크는 스트리밍 응답을 구현하는 방식이 조금씩 달라요. Gradio와 Chainlit의 스트리밍 방식을 각각 설명해 보세요.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Gradio는 응답 함수에서 `yield`로 누적된 부분 응답을 반환하는 제너레이터 방식이고, Chainlit은 `await msg.stream_token(token)`으로 토큰을 하나씩 메시지에 흘려보내는 방식이에요.
+
+**해설**: Gradio는 동기 함수에서 `yield partial`처럼 점점 길어지는 문자열을 내보내면 UI가 자동으로 갱신돼요. 반면 Chainlit은 async 기반이라 토큰 단위로 `stream_token`을 호출하고 마지막에 `msg.update()`로 마무리하죠. 같은 스트리밍이라도 프레임워크 철학에 따라 API가 달라지는 좋은 예시예요.
+
+</details>
+
+**Q5. 응용 시나리오: 팀에서 React 수준의 UI를 가진 프로덕션급 웹 서비스를 파이썬만으로 만들고 싶어해요. 단순 데모가 아니라 실제 서비스가 목표라면 어떤 프레임워크가 적합하고, 감수해야 할 단점은 뭘까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Reflex가 적합해요. 대신 학습 곡선이 가장 가파르고, 챗봇 전용 컴포넌트가 없어 직접 구현해야 한다는 단점을 감수해야 하죠.
+
+**해설**: Reflex는 파이썬 코드를 React + FastAPI로 컴파일하는 풀스택 프레임워크라 완전한 SPA를 만들 수 있어요. 다만 빌드 시간이 길고, 간단한 데모에는 오버엔지니어링이라는 점도 본문에서 짚었죠. "데모냐 프로덕션이냐"가 선택의 핵심 기준이에요.
+
+</details>
+
+**Q6. OX 퀴즈: Mesop은 구글의 공식 지원 제품이라서 장기 지원이 보장돼요. (O/X)**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X
+
+**해설**: Mesop은 구글 내부에서 AI 데모와 내부 툴 개발에 실제로 쓰이고 있긴 하지만, 공식적으로는 "This is not an officially supported Google product"라는 면책 조항이 붙어 있어요. 활발히 업데이트되고는 있어도 공식 지원이 보장되지 않는다는 점은 도입 전에 알아둬야 하죠.
+
+</details>
+
+**Q7. 기존 Jupyter 노트북 자산을 활용해 앱을 만들고 싶을 때 Voilà와 Panel 중 어떤 기준으로 골라야 할까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 간단한 앱이면 Voilà, 복잡한 대시보드+챗봇 결합이면 Panel을 고르면 돼요.
+
+**해설**: Voilà는 노트북의 코드 셀을 숨기고 출력과 ipywidgets만 보여주는 방식이라 기존 분석을 그대로 앱으로 바꾸기 좋아요. 다만 챗봇 UI가 원시적이고 스트리밍 구현이 복잡하죠. Panel은 `pn.chat.ChatInterface` 같은 전용 채팅 컴포넌트와 무한 스크롤 피드까지 갖춰서 본격적인 대시보드+챗봇 조합에 더 어울려요.
+
+</details>
+
+**Q8. 응용 시나리오: 학회에서 발표할 ML 모델 데모를 내일까지 무료로 공개 배포해야 해요. 어떤 조합이 가장 현실적이고, 한 가지 주의할 점은 뭘까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Gradio + Hugging Face Spaces 조합이 가장 현실적이에요. 주의할 점은 `launch(share=True)`로 만든 임시 공유 링크는 7일 후 만료된다는 거예요.
+
+**해설**: Gradio는 `gr.ChatInterface` 몇 줄로 데모를 완성하고 Spaces 무료 티어로 바로 배포할 수 있어서 시간 압박이 있을 때 최적이에요. 다만 `share=True`로 띄운 링크는 임시 URL이라 장기 공개용으로는 Spaces에 제대로 올려야 하죠.
+
+</details>

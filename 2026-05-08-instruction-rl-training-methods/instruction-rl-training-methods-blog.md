@@ -1,5 +1,7 @@
 # 오픈 LLM Post-Training 완전 정복: SFT·RL 레시피·데이터 합성·평가 종합 비교
 
+> 📊 **발표자료**: [instruction-rl-training-methods-presentation.pptx](./instruction-rl-training-methods-presentation.pptx)
+
 > **이 글은 [PLM 사전학습 평가 리서치(2026-05-06)](../2026-05-06-plm-pretraining-evaluation/)의 후속편입니다.**
 > Post-training 단계 — SFT, Preference Optimization, RL — 전반을 실전 레시피 수준으로 다룹니다.
 
@@ -752,3 +754,97 @@ def rlvr_reward(response, ground_truth, task_type):
 ---
 
 *이 문서는 2026-05-08 기준으로 작성되었습니다. 모든 수치는 해당 기술 보고서에서 발췌했으며, 인용이 불확실한 경우 "approx" 표시를 했습니다.*
+
+---
+
+## 📝 학습 퀴즈
+
+지금까지 읽은 내용, 얼마나 기억나는지 가볍게 점검해 보세요. 답을 먼저 생각해 본 다음 "정답 보기"를 눌러 확인하면 돼요.
+
+**Q1. InstructGPT 논문의 가장 유명한 발견은 "1.3B InstructGPT가 175B GPT-3보다 인간 평가자에게 선호된다"는 것이었는데요. 이 결과가 시사하는 핵심 메시지는 뭘까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 모델 파라미터 수보다 학습 방식(post-training, 즉 인간 피드백 기반 정렬)이 사용자 만족도에 훨씬 더 중요하다는 것.
+
+**해설**: 100배 이상 작은 모델이 RLHF(SFT → RM → PPO) 파이프라인을 거치는 것만으로 거대 모델을 이겼거든요. 이게 현대 post-training 시대를 연 결정적 증거였고, 이후 모든 오픈 LLM이 SFT + preference 학습을 표준으로 채택하게 됐죠.
+
+</details>
+
+**Q2. OX 문제예요. "DPO는 PPO처럼 별도의 Reward Model을 먼저 학습한 뒤, 그 RM 신호로 정책을 최적화한다." 맞을까요, 틀릴까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X (틀렸어요)
+
+**해설**: DPO의 핵심이 바로 RM 학습 단계를 없앤 거예요. 최적 정책과 reward function 사이의 closed-form 관계를 이용해서, preference pair(선호/비선호 응답 쌍)만으로 단일 분류 손실을 통해 정책을 직접 최적화하죠. 그래서 RM→PPO 2단계가 필요한 RLHF보다 학습이 훨씬 간단하고 안정적이에요.
+
+</details>
+
+**Q3. GRPO가 PPO와 구조적으로 가장 크게 다른 점은 뭐고, 그 덕분에 얻는 실질적 이득은 뭔가요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Value network(critic)를 제거하고, 같은 프롬프트에 대한 G개 응답 그룹의 평균/표준편차를 baseline으로 사용해요. 덕분에 GPU 메모리를 40~60% 절약하고 critic bias 문제도 없어지죠.
+
+**해설**: PPO는 policy와 비슷한 크기의 value network를 따로 둬서 기댓값을 추정하는데요, GRPO는 그룹 내 reward를 정규화한 값을 advantage로 바로 쓰기 때문에 그 네트워크 자체가 필요 없어요. 수학/코딩처럼 rule-based reward가 있는 도메인에서 특히 강력해서 DeepSeek-R1, Qwen3 등이 채택했죠.
+
+</details>
+
+**Q4. DeepSeek-R1-Zero와 DeepSeek-R1의 학습 파이프라인은 어떻게 다른가요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: R1-Zero는 SFT 없이 베이스 모델에 rule-based reward만으로 GRPO를 바로 적용한 순수 RL이고, R1은 cold-start SFT → Reasoning RL → Rejection Sampling SFT → General RL의 4단계 파이프라인이에요.
+
+**해설**: R1-Zero는 "SFT 없이도 순수 RL만으로 chain-of-thought와 self-reflection이 창발한다"는 걸 보여준 실험적 증명이었는데요, 가독성 문제 등이 있어서 실제 제품 모델인 R1은 수천 개의 long CoT 데이터로 cold-start를 한 뒤 다단계로 다듬었죠. 이 레시피를 Qwen3, Sky-T1 같은 후속 reasoning 모델들이 따라가고 있어요.
+
+</details>
+
+**Q5. ORM(Outcome Reward Model)과 PRM(Process Reward Model)의 차이를 구분해 보세요. 각각의 장단점은 뭘까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: ORM은 최종 답만 평가(정답/오답)하고, PRM은 추론의 각 단계마다 점수를 부여해요. ORM은 구현이 간단하고 데이터 수집이 쉽지만 중간 오류를 못 잡고, PRM은 오류를 조기에 감지하고 세밀한 피드백을 주지만 단계별 레이블링 비용이 높죠.
+
+**해설**: PRM의 레이블링 비용 문제를 풀려고 Math-Shepherd는 MCTS 기반으로 step-level 레이블을 자동 생성했어요. 수학 추론처럼 긴 풀이 과정이 있는 태스크에서는 "어디서 틀렸는지"를 아는 PRM이 더 정밀한 학습 신호를 주는 거죠.
+
+</details>
+
+**Q6. 응용 시나리오예요. 수학과 코딩 성능을 끌어올리는 RL을 하려는데, reward model이 자꾸 hacking당하는 게 걱정이에요. 본문에서 소개한 접근 중 어떤 걸 쓰는 게 좋고, 왜 그럴까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: RLVR(또는 rule-based reward 기반 GRPO)을 쓰는 게 좋아요. 수학은 정답 검증, 코드는 테스트 실행처럼 외부 verifier를 reward로 직접 사용하면 reward hacking을 원천 차단할 수 있거든요.
+
+**해설**: 신경망 RM은 모델이 RM의 약점을 파고드는 hacking에 취약한데요, "테스트를 통과했는가"처럼 검증 가능한 신호는 속일 방법 자체가 없죠. Tulu 3가 RLVR로 math/coding 성능을 크게 올렸고, DeepSeek-R1도 accuracy + format의 rule-based reward만으로 학습했어요.
+
+</details>
+
+**Q7. Self-Instruct, Evol-Instruct, Magpie는 모두 instruction 데이터를 합성하는 방법인데요. 세 방법의 핵심 아이디어를 각각 한 줄로 구분해 보세요.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Self-Instruct는 175개의 인간 작성 seed에서 출발해 LLM이 새 instruction을 생성·필터링하는 방식, Evol-Instruct는 기존 instruction을 더 복잡하게(in-depth) 또는 더 다양하게(in-breadth) 진화시키는 방식, Magpie는 seed prompt 없이 chat template의 앞부분만 입력해서 정렬된 LLM이 user query를 스스로 완성하게 하는 방식이에요.
+
+**해설**: 세 방법은 "시작점"이 다른 게 포인트인데요. Self-Instruct는 사람이 만든 seed가 필요하고, Evol-Instruct는 기존 데이터를 변형하고, Magpie는 아예 아무것도 없이 모델 안에 학습된 분포에서 query를 뽑아내죠. Self-Instruct의 한계(반복 패턴, 쉬운 instruction 편향)를 후속 방법들이 보완해 온 흐름이에요.
+
+</details>
+
+**Q8. LM-judge 기반 평가(MT-Bench, AlpacaEval 등)에는 여러 편향이 있다고 했는데요. 본문에서 소개한 대표적 편향을 두 가지 이상 들고, 완화 방법도 하나 말해 보세요.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Length bias(긴 응답 선호), Position bias(먼저 나온 응답 선호), Sycophancy(judge와 같은 제조사 모델에 유리) 등이 있어요. 완화 방법으로는 AlpacaEval 2.0의 LC(Length-Controlled) win-rate처럼 길이 효과를 통제하거나, 여러 judge로 병행 평가하는 게 있죠.
+
+**해설**: 심지어 구조화된 일정 응답만으로 86.5% LC win-rate를 뚫은 null model 공격 사례도 있을 만큼 judge 평가는 취약한데요. 그래서 단일 LM-judge 점수만 믿지 말고 Chatbot Arena 같은 인간 평가나 IFEval 같은 규칙 기반 검증을 함께 보는 게 안전해요.
+
+</details>

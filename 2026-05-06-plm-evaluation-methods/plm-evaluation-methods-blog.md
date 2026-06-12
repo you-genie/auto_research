@@ -1,5 +1,7 @@
 # 주요 PLM 논문들은 모델을 어떻게 평가했나? — GPT부터 DeepSeek·Qwen·Gemma까지 평가 방법론 비교 분석
 
+> 📊 **발표자료**: [plm-evaluation-methods-presentation.pptx](./plm-evaluation-methods-presentation.pptx)
+
 > "The diversity of the tasks the model is tested on is as important as the number of parameters."
 > — 여러 LLM 평가 연구자들이 공통으로 강조하는 원칙
 
@@ -788,3 +790,97 @@ PLM 평가 방법론을 쭉 살펴보면, 결국 이런 흐름이에요:
 16. [EleutherAI lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness) — EleutherAI
 17. [OpenCompass](https://github.com/open-compass/opencompass) — OpenCompass Team
 18. [HRET: A Self-Evolving LLM Evaluation Toolkit for Korean](https://arxiv.org/abs/2503.22968) — 2025
+
+---
+
+## 📝 학습 퀴즈
+
+지금까지 읽은 내용, 얼마나 기억나는지 가볍게 점검해 보세요. 답을 먼저 생각해 본 다음 "정답 보기"를 눌러 확인하면 돼요.
+
+**Q1. GPT-1과 GPT-2의 평가 방식은 근본적으로 뭐가 달랐을까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: GPT-1은 사전학습 후 task별로 fine-tuning한 뒤 성능을 측정했고, GPT-2는 fine-tuning 없이 순수 zero-shot으로 평가했어요.
+
+**해설**: GPT-1 논문에는 base model 자체를 직접 평가하는 표가 아예 없었어요. 모든 평가가 fine-tune 후 성능이었죠. 반면 GPT-2는 "fine-tuning 없이도 zero-shot으로 여러 task를 풀 수 있다"는 주장을 내세우면서 파라미터 수정 없이 모델 그 자체를 평가하기 시작했고, 이게 이후 base model 평가의 출발점이 됐어요.
+
+</details>
+
+**Q2. OX 문제 — GPT-3 평가의 핵심은 zero-shot, one-shot, few-shot 세 가지 설정을 모두 비교하는 것이었고, few-shot 예제가 늘어날수록 성능이 올라가는 패턴이 in-context learning의 증거가 됐다. (O/X)**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: O
+
+**해설**: GPT-3 논문은 0-shot / 1-shot / few-shot(예제 10~100개) 세 설정에서 모델을 평가하는 방식을 표준으로 만들었어요. TriviaQA에서 zero-shot 64.3% → one-shot 68.0% → few-shot 71.2%처럼 예제가 많아질수록 성능이 오르는 패턴이 in-context learning의 핵심 증거였죠.
+
+</details>
+
+**Q3. InstructGPT 논문이 평가 방법론 역사에 남긴 가장 중요한 기여는 뭘까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: base model 평가와 instruction-following 모델 평가를 처음으로 명시적으로 분리해서 보고한 것이에요.
+
+**해설**: InstructGPT는 human preference 평가를 중심에 두면서도, RLHF가 기존 NLP 능력을 망가뜨리지 않는지(alignment tax) 확인하려고 SQuADv2, HellaSwag 같은 벤치마크로 regression 체크를 따로 했어요. 이 "비교 구조"가 이후 Qwen, DeepSeek가 base 테이블과 chat 테이블을 따로 만드는 관행의 원형이 됐죠.
+
+</details>
+
+**Q4. Qwen·DeepSeek 같은 중국 LLM 팀의 평가가 GPT·Gemma 같은 서구 팀과 구별되는 점을 두 가지 이상 꼽아보세요.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: ① C-Eval, CMMLU 같은 중국어 전용 벤치마크를 필수로 포함하고, ② BPB(Bits-Per-Byte) 같은 언어 모델링 품질 지표를 직접 보고하며, ③ 오염 검사 방법을 논문에 상세히 기술하는 경향이 있어요.
+
+**해설**: 서구 LLM 논문들은 대부분 중국어 벤치마크를 포함하지 않고, BPB 보고나 오염 검사 기술도 일부에 그쳐요. 반면 DeepSeek는 Pile-test BPB를 숫자로 공개하고, Qwen은 OpenCompass 같은 공개 툴을 병용해 재현 가능성을 확보하는 식으로 더 체계적인 모습을 보였죠.
+
+</details>
+
+**Q5. 객관식 벤치마크에서 base model을 평가할 때 쓰는 "perplexity 기반 평가"는 어떤 방식인가요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 각 선택지의 perplexity를 계산해서 가장 낮은(= 모델이 가장 자연스럽다고 보는) 선택지를 모델의 답으로 간주하는 방식이에요.
+
+**해설**: instruction을 따르지 못하는 base model은 "정답을 골라줘"라는 지시에 제대로 반응하지 못할 수 있거든요. 그래서 DeepSeek LLM 논문처럼 객관식은 perplexity 기반, 수학·코드는 free-form generation 기반, 사전학습 품질은 BPB로 측정하는 식으로 평가 방식을 나눠서 쓰는 거예요.
+
+</details>
+
+**Q6. OX 문제 — MMLU나 GSM8K 같은 벤치마크는 시간이 지나도 모델 변별력이 유지되기 때문에, 2026년에 새 PLM을 평가할 때도 이것들만으로 충분하다. (O/X)**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X
+
+**해설**: 모델이 좋아지면서 MMLU, GSM8K, HellaSwag 같은 벤치마크는 포화(saturation)되어 변별력이 떨어지고 있어요. 게다가 훈련 데이터에 테스트 셋이 섞이는 데이터 오염 문제도 심각하죠. 그래서 GPQA Diamond, MMLU-Pro처럼 더 어려운 벤치마크나, LiveBench처럼 매달 새 문제를 추가해 오염을 차단하는 벤치마크가 함께 필요해요.
+
+</details>
+
+**Q7. 응용 시나리오 — 여러분이 새 base model을 훈련해서 technical report를 쓴다고 해볼게요. 평가 결과의 신뢰성을 위해 본문에서 권장한 평가 프로토콜 항목을 세 가지 이상 말해보세요.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: ① base model과 instruction-tuned 모델 결과 분리 보고, ② 벤치마크별 shot 설정 명시, ③ 디코딩 방식(greedy vs sampling, temperature) 명시, ④ 오염 검사 수행과 방법 기술, ⑤ BPB 또는 perplexity 보고, ⑥ 동일 규모 비교 모델 명시 — 이 중 세 가지 이상이면 돼요.
+
+**해설**: 같은 MMLU라도 shot 수나 프롬프트, 스코어링 방식에 따라 점수가 크게 달라질 수 있거든요. 그래서 최신 논문들은 평가 조건을 최대한 투명하게 공개하는 방향으로 수렴하고 있고, n-gram overlap이나 Min-k% Prob 같은 오염 검사도 명시하는 게 표준이 되어가고 있어요.
+
+</details>
+
+**Q8. 한국어 PLM을 평가할 때 영어 벤치마크를 그냥 한국어로 번역해서 쓰면 안 되는 이유는 뭘까요? 그리고 대안이 되는 벤치마크는요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 번역 벤치마크는 문화적 맥락을 놓치기 때문이에요. 대안으로는 공무원 시험·수능 같은 원본 한국어 시험 문제로 만든 KMMLU, 한국 문화·역사 지식에 특화된 HAE-RAE Bench, 한국어 추론 평가용 KoBEST 등이 있어요.
+
+**해설**: KMMLU가 가치 있는 이유가 바로 번역이 아닌 원본 한국어 자료라는 점이에요. 그 밖에도 한국어 평가에서는 토크나이저에 따라 perplexity가 달라지는 문제, 표준어/구어체 레지스터 차이, 동형이의어 같은 한국어 특유의 함정도 함께 고려해야 하죠.
+
+</details>

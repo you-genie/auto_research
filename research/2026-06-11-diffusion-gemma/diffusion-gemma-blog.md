@@ -1,5 +1,7 @@
 # DiffusionGemma: 구글이 꺼낸 비밀 병기 — 텍스트도 이제 "뿌려서" 만든다
 
+> 📊 **발표자료**: [diffusion-gemma-presentation.pptx](./diffusion-gemma-presentation.pptx)
+
 > "DiffusionGemma prioritizes speed and parallel layout generation. Its overall output quality is lower than standard Gemma 4."  
 > — Google DeepMind, DiffusionGemma 모델 카드, 2026년 6월
 
@@ -300,3 +302,97 @@ Stable Diffusion이 이미지 생성을 바꿔놓은 것처럼, 텍스트 디퓨
 12. [Introducing Mercury — Inception Labs](https://www.inceptionlabs.ai/blog/introducing-mercury)
 13. [Mercury 2 Launch — BusinessWire](https://www.businesswire.com/news/home/20260224034496/en/Inception-Launches-Mercury-2-the-Fastest-Reasoning-LLM-5x-Faster-Than-Leading-Speed-Optimized-LLMs-with-Dramatically-Lower-Inference-Cost)
 14. [Diffusion LLMs in 2026 — Masturbyte](https://masturbyte.com/diffusion-llms.html)
+
+---
+
+## 📝 학습 퀴즈
+
+지금까지 읽은 내용, 얼마나 기억나는지 가볍게 점검해 보세요. 답을 먼저 생각해 본 다음 "정답 보기"를 눌러 확인하면 돼요.
+
+**Q1. 기존 AR(자기회귀) 모델이 느린 진짜 이유는 뭘까요? GPU의 연산 능력이 부족해서일까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 아니에요. 연산이 아니라 매 토큰마다 모델 가중치를 메모리에서 불러오는 데 대부분의 시간이 쓰이는 "메모리 바운드(memory-bound)" 문제 때문이에요.
+
+**해설**: AR 모델은 토큰 하나를 예측할 때마다 수십 GB짜리 가중치를 다시 로딩해야 하죠. 그래서 GPU가 계산을 못 해서가 아니라 데이터를 나르느라 느린 거예요. 디퓨전 방식은 256개 토큰을 한 번에 처리해서 가중치 로딩 횟수를 확 줄이는 게 핵심이에요.
+
+</details>
+
+**Q2. OX 퀴즈! DiffusionGemma는 텍스트뿐 아니라 이미지도 생성할 수 있다. (O/X)**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X
+
+**해설**: 이름에 "Diffusion"이 들어가서 이미지 생성 모델로 오해하기 쉬운데, DiffusionGemma는 텍스트 생성 모델이에요. 이미지나 영상(최대 60초)을 입력으로 받을 수는 있지만, 출력은 오직 텍스트뿐이죠. 오디오는 입력도 아직 미지원이에요.
+
+</details>
+
+**Q3. Gemini Diffusion과 DiffusionGemma, 둘은 뭐가 다를까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Gemini Diffusion은 2025년 5월 Google I/O에서 공개된 비공개 리서치 데모이고, DiffusionGemma는 그 기술 계보를 이어받아 Apache 2.0 라이선스로 누구나 쓸 수 있게 공개한 오픈소스 모델이에요.
+
+**해설**: Gemini Diffusion은 대기자 명단으로만 접근 가능한 실험적 프로젝트였죠. 반면 DiffusionGemma는 Gemma 4 26B MoE를 기반으로 만들어져 Hugging Face, vLLM 등에서 바로 받아 로컬이나 클라우드에 배포할 수 있어요. "실제로 쓸 수 있는 첫 오픈 디퓨전 LLM"이라는 게 핵심 차이예요.
+
+</details>
+
+**Q4. DiffusionGemma의 Uniform State Diffusion(USD)이 기존 마스크 디퓨전(MDLM, LLaDA 등)과 다른 점은 뭘까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 마스크 디퓨전은 `[MASK]` 토큰으로 텍스트를 오염시키지만, USD는 랜덤한 실제 토큰으로 노이즈를 만들어요. 게다가 한번 잠정 확정된 토큰도 확률이 낮아지면 다시 "재노이징(re-noising)"해서 바꿀 수 있죠.
+
+**해설**: 이 재노이징 능력이 AR 모델과의 결정적 차이이기도 해요. AR 모델은 한번 내뱉은 토큰을 절대 되돌릴 수 없는데, USD는 나중 스텝에서 더 나은 맥락이 생기면 이미 정한 토큰도 고칠 수 있거든요. 덕분에 전체적으로 더 일관성 있는 텍스트를 만들 수 있어요.
+
+</details>
+
+**Q5. DiffusionGemma의 "캔버스(Canvas)"는 어떤 역할을 하고, 왜 속도 향상으로 이어질까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 캔버스는 256개 토큰짜리 작업판이에요. 캔버스 안의 토큰들을 동시에 디노이징하니까 가중치 로딩 횟수가 1/256로 줄어들고, GPU 병렬 연산을 풀로 활용할 수 있어 빨라지는 거예요.
+
+**해설**: 완성된 캔버스는 KV 캐시에 저장하고 다음 캔버스로 넘어가는 "블록-자기회귀" 방식이죠. 그래서 1,000토큰짜리 응답이면 캔버스를 4번 처리하면 돼요. 다만 256토큰 블록 단위로 처리하다 보니 매우 긴 텍스트에서는 블록 간 일관성 유지가 어려울 수 있다는 한계도 있어요.
+
+</details>
+
+**Q6. DiffusionGemma는 인코더 모드와 디노이저 모드에서 서로 다른 어텐션을 써요. 각각 어떤 어텐션이고, 디노이저 쪽이 중요한 이유는 뭘까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 인코더 모드는 인과적(Causal) 어텐션, 디노이저 모드는 양방향(Bidirectional) 어텐션을 써요. 양방향 어텐션 덕분에 캔버스 내 모든 위치를 동시에 참조할 수 있어요.
+
+**해설**: AR 모델은 왼쪽에서 오른쪽으로만 볼 수 있지만, 디노이저는 캔버스 안의 앞뒤 토큰을 전부 보면서 디노이징하죠. 같은 Gemma 4 백본 하나를 두 가지 모드로 돌려쓰는 구조인데, 프롬프트 처리와 완성된 캔버스 저장은 인코더 모드가, 토큰 병렬 디노이징은 디노이저 모드가 맡아요.
+
+</details>
+
+**Q7. 응용 문제! 여러분이 두 가지 서비스를 만든다고 해봐요. (A) 수학 올림피아드 문제 풀이 튜터, (B) 초당 수천 토큰을 쏟아내야 하는 코드 자동완성 에이전트. 각각 DiffusionGemma와 Gemma 4 중 어느 쪽이 더 적합할까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: (A) 수학 튜터에는 Gemma 4, (B) 코드 자동완성 에이전트에는 DiffusionGemma가 더 적합해요.
+
+**해설**: DiffusionGemma는 AIME 같은 다단계 수학 추론에서 AR 모델 대비 10~20%p 뒤처지는 "빠르지만 덜 똑똑한" 모델이거든요. 반면 코딩이나 구조화된 작업은 격차가 상대적으로 작고, 초당 1,000+ 토큰 속도는 LLM 호출을 연속으로 수행하는 에이전트 시나리오에서 큰 이점이 되죠. 태스크 성격에 따라 속도와 품질의 트레이드오프를 고르는 게 포인트예요.
+
+</details>
+
+**Q8. OX 퀴즈! DiffusionGemma의 "최대 4배 빠르다"는 속도 이점은 다수 사용자가 동시에 요청하는 클라우드 서빙 환경에서도 그대로 유지된다. (O/X)**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X
+
+**해설**: 공식 속도 수치는 단일 유저 로컬 환경 기준이에요. 다수 요청이 동시에 들어오는 서빙 환경에서는 이미 GPU가 배칭으로 병렬성을 확보하고 있어서 디퓨전의 속도 이점이 줄어들죠. 구글도 공식 문서에서 이 한계를 직접 인정했고, 그래서 DiffusionGemma는 로컬 배포나 단일 사용자 시나리오에서 특히 빛나는 모델이에요.
+
+</details>

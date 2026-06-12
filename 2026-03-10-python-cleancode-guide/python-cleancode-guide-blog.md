@@ -1,5 +1,7 @@
 # 파이썬 개발자를 위한 클린코드 가이드: Python 3.12/3.13 신기능 중심, AI 백엔드·프론트엔드 개발자 대상
 
+> 📊 **발표자료**: [python-cleancode-guide-presentation.md](./python-cleancode-guide-presentation.md)
+
 > "Readability counts. Special cases aren't special enough to break the rules. Although practicality beats purity."
 > — [The Zen of Python (PEP 20)](https://peps.python.org/pep-0020/), Tim Peters
 
@@ -1401,3 +1403,97 @@ pre-commit run --all-files  # 전체 파일 검사
 | 23 | Pydantic AI — FastAPI for GenAI | Pydantic AI | https://ai.pydantic.dev/ |
 | 24 | Error Handling Best Practices for Production LLM | Markaicode | https://markaicode.com/llm-error-handling-production-guide/ |
 | 25 | Complete Guide to Building a Robust RAG Pipeline | Dhiwise | https://www.dhiwise.com/post/build-rag-pipeline-guide |
+
+---
+
+## 📝 학습 퀴즈
+
+지금까지 읽은 내용, 얼마나 기억나는지 가볍게 점검해 보세요. 답을 먼저 생각해 본 다음 "정답 보기"를 눌러 확인하면 돼요.
+
+**Q1. Python 3.12의 PEP 701은 f-string의 어떤 제약들을 해소했나요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 따옴표 재사용 불가, 백슬래시 사용 불가, 여러 줄 표현식·주석·중첩 f-string 제한을 모두 해소했어요.
+
+**해설**: 3.11 이하에서는 f-string 안에서 바깥과 같은 따옴표를 못 쓰고 `\n` 같은 백슬래시도 변수로 우회해야 했는데요, 3.12부터는 `f"{"\n".join(songs)}"`처럼 직접 쓸 수 있어요. 그래서 LLM 프롬프트나 RAG 결과를 포매팅할 때 리스트 컴프리헨션과 조건문을 f-string 안에 바로 넣을 수 있게 됐죠.
+
+</details>
+
+**Q2. OX 문제: Python 3.12의 PEP 695 문법을 쓰면 제네릭 함수를 만들 때 `TypeVar`를 따로 임포트해서 선언해야 한다.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X예요.
+
+**해설**: PEP 695의 핵심이 바로 `def first_element[T](items: list[T]) -> T:`처럼 함수나 클래스 이름 뒤에 `[T]`만 붙이면 되는 새 문법이에요. `TypeVar`, `ParamSpec`, `Generic`을 임포트하던 장황한 코드가 사라지고, `type EmbeddingVector = list[float]` 같은 `type` 문으로 타입 별칭도 깔끔하게 선언할 수 있죠.
+
+</details>
+
+**Q3. 여러 LLM 공급자(OpenAI, Anthropic 등)를 추상화한 클래스 계층에서 `@override` 데코레이터를 붙이면 어떤 실수를 잡을 수 있나요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 메서드 이름 오타나 시그니처 불일치로 부모 메서드를 제대로 재정의하지 못한 경우를 타입 체커가 잡아줘요.
+
+**해설**: 예를 들어 `complete`를 재정의한다는 게 `complet`로 오타를 내면, 데코레이터가 없을 땐 그냥 새 메서드가 하나 생겨버려서 아무도 모르게 지나가는데요. `@override`를 붙이면 타입 체커가 "부모에 그런 메서드가 없다"고 바로 알려줘서 조기에 발견할 수 있어요.
+
+</details>
+
+**Q4. Python 3.13의 Free-Threaded CPython(PEP 703)을 지금 당장 AI 프로덕션 서버에 도입해도 될까요? 이유와 함께 생각해 보세요.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 아직은 실험적으로만 쓰는 게 좋아요.
+
+**해설**: GIL 없이 스레드가 진짜 병렬로 도는 건 매력적이지만, NumPy·PyTorch 같은 주요 ML 라이브러리는 별도의 호환 빌드가 필요하고 단일 스레드 성능도 30~40%가량 떨어질 수 있어요. JIT(PEP 744)도 마찬가지로 아직 몇 퍼센트 수준의 향상이라, 프로덕션에서는 라이브러리 내장 최적화나 Numba가 훨씬 현실적인 선택이죠.
+
+</details>
+
+**Q5. `os.getenv()`로 환경 변수를 직접 읽는 방식과 비교했을 때, pydantic-settings를 쓰면 뭐가 좋아지나요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 환경 변수를 타입-안전하게 관리할 수 있어요. 형변환·검증·기본값 처리가 자동이고, `SecretStr`로 API 키 노출도 막을 수 있죠.
+
+**해설**: `os.getenv()`는 결과가 `None`일 수 있고 `int()`나 불리언 변환을 일일이 직접 해야 하는데요, `BaseSettings`를 상속하면 타입 선언만으로 변환과 검증(`Field(ge=0.0, le=2.0)` 같은 범위 제한까지)이 자동으로 이뤄져요. 여기에 `@lru_cache`를 붙여 설정을 한 번만 로드하고, FastAPI 의존성으로 주입하는 게 표준 패턴이에요.
+
+</details>
+
+**Q6. LLM API를 호출할 때 견고한 에러 핸들링을 위해 본문에서 제안한 세 가지 장치는 무엇인가요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 재시도(tenacity의 지수 백오프), 타임아웃(`asyncio.wait_for`), 폴백(기본 모델 실패 시 다른 모델로 전환)이에요.
+
+**해설**: `RateLimitError`나 타임아웃 같은 일시적 오류는 tenacity의 `wait_exponential`로 간격을 늘려가며 재시도하고, 응답이 너무 늦으면 타임아웃으로 끊고, 그래도 실패하면 `gpt-4o-mini` 같은 폴백 모델로 자동 전환하는 구조였죠. 더불어 `LLMError` 같은 도메인 예외 계층을 만들어 라이브러리 예외를 감싸는 것도 포인트예요.
+
+</details>
+
+**Q7. Streamlit 챗봇 코드가 스파게티가 되는 걸 막으려고 본문에서 제안한 분리 방법은 무엇이었나요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 상태(state), 서비스(service), UI 컴포넌트(components)를 각각 별도 모듈로 분리하는 거예요.
+
+**해설**: 세션 상태는 `ChatState` 데이터클래스로 중앙화하고, LLM 호출 같은 비즈니스 로직은 `ChatService`로, 메시지 렌더링은 `render_message` 같은 컴포넌트 함수로 나눴죠. Gradio에서도 같은 맥락으로 핸들러 클래스와 Blocks UI 레이아웃을 분리하는 패턴을 소개했어요.
+
+</details>
+
+**Q8. 응용 문제: 새 RAG 프로젝트를 시작하는데 임베딩 모델과 벡터 DB를 나중에 교체할 가능성이 커요. 본문의 패턴대로라면 파이프라인을 어떻게 설계해야 할까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: `Embedder`, `Retriever` 같은 추상 클래스(ABC) 인터페이스를 정의하고, `RAGPipeline`은 구체 구현이 아닌 인터페이스에 의존하도록 조립하면 돼요.
+
+**해설**: 임베딩 생성·문서 검색·컨텍스트 조립·LLM 호출을 한 함수에 몰아넣지 않고, 각 단계를 인터페이스로 분리하면 임베딩 모델이나 벡터 DB를 바꿔도 해당 구현체만 갈아끼우면 되죠. 프롬프트도 `RAGPrompt`처럼 버전을 명시한 별도 모듈로 관리하면 교체와 추적이 훨씬 쉬워져요.
+
+</details>

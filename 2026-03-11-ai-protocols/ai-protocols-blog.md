@@ -6,6 +6,8 @@ date: 2026-03-11
 
 # AI 프로토콜 완전 정복: MCP, A2A, Tool Use, AGENTS.md까지 한 번에
 
+> 📊 **발표자료**: [ai-protocols-presentation.pptx](./ai-protocols-presentation.pptx)
+
 > "The protocol wars are over. MCP won the tool connectivity battle. A2A is winning the agent collaboration layer. And together, they're forming the backbone of the agentic web."
 > — DEV Community, 2026
 
@@ -612,3 +614,97 @@ AI 에이전트 생태계는 이 4개 레이어가 **레고 블록처럼 조합*
 | 23 | [2026: Enterprise-Ready MCP](https://www.cdata.com/blog/2026-year-enterprise-ready-mcp-adoption) | CData |
 | 24 | [A2A Protocol Upgrade](https://cloud.google.com/blog/products/ai-machine-learning/agent2agent-protocol-is-getting-an-upgrade) | Google Cloud Blog |
 | 25 | [Open Source AI Agent Frameworks 2026](https://openagents.org/blog/posts/2026-02-23-open-source-ai-agent-frameworks-compared) | OpenAgents |
+
+---
+
+## 📝 학습 퀴즈
+
+지금까지 읽은 내용, 얼마나 기억나는지 가볍게 점검해 보세요. 답을 먼저 생각해 본 다음 "정답 보기"를 눌러 확인하면 돼요.
+
+**Q1. AI 프로토콜 표준화가 등장하기 전에 있었던 "M×N 통합 문제"란 뭘까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: M개의 AI 시스템이 N개의 도구/데이터에 연결하려면 M×N개의 커스텀 연결을 일일이 만들어야 했던 문제예요.
+
+**해설**: 에이전트마다, 회사마다, 프레임워크마다 도구 연결 방식이 제각각이라 유지보수가 악몽이었죠. 그래서 USB-C가 충전 방식을 통일한 것처럼, MCP 같은 프로토콜이 연결 방식을 표준화하면서 이 문제를 해결한 거예요.
+
+</details>
+
+**Q2. MCP와 A2A는 각각 무엇을 연결하는 프로토콜인지 한 줄로 구분해 볼까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: MCP는 "에이전트 ↔ 도구/데이터" 연결(수직 레이어), A2A는 "에이전트 ↔ 에이전트" 협력(수평 레이어)을 담당해요.
+
+**해설**: 본문 비유로는 MCP가 "에이전트에게 손을 주는 프로토콜", A2A가 "에이전트에게 동료를 주는 프로토콜"이었죠. 둘은 경쟁 관계가 아니라 상호 보완적이라서, 실전 아키텍처에서는 오케스트레이터가 A2A로 에이전트들과 소통하고 각 에이전트는 MCP로 도구에 접근하는 식으로 함께 쓰여요.
+
+</details>
+
+**Q3. OX 퀴즈! "MCP의 Sampling 기능은 클라이언트가 서버에게 데이터를 요청하는 기능이다." 맞을까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X예요.
+
+**해설**: Sampling은 방향이 반대인 게 포인트예요. 서버 쪽에서 "AI한테 이것 좀 물어봐줘"라고 LLM 추론을 요청하는 역방향 기능이거든요. 서버→클라이언트로 제공되는 Tools, Resources, Prompts와 달리 클라이언트→서버 방향의 독특한 기능이죠.
+
+</details>
+
+**Q4. A2A에서 각 에이전트가 자신의 능력을 외부에 알리는 핵심 메커니즘은 뭘까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Agent Card(에이전트 카드)예요. `/.well-known/agent.json` 경로에 자신의 이름, 능력(capabilities), 엔드포인트, 인증 방식을 JSON으로 공개하죠.
+
+**해설**: 본문에서 "명함 같은 것"이라고 비유했는데요, 다른 에이전트가 이 카드를 읽고 "이 에이전트는 티켓 생성이 가능하구나" 하고 발견(discovery)할 수 있는 구조예요. 서로 다른 벤더의 에이전트끼리 협력할 수 있게 해주는 핵심 장치죠.
+
+</details>
+
+**Q5. OpenAI와 Claude의 Tool Use 방식에서 도구 스키마를 정의하는 키 이름이 서로 달라요. 각각 뭐였을까요? 그리고 두 방식의 공통점은요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: OpenAI는 `parameters`, Claude는 `input_schema`를 써요. 공통점은 둘 다 JSON Schema 기반이고, `strict: true`로 스키마 완전 준수를 보장할 수 있다는 거예요.
+
+**해설**: Tool Use는 단일 표준이 아니라 각 LLM 제공사의 구현 방식인데요, 2025년 기준으로 JSON Schema 기반 도구 정의가 사실상 공통 형식이 됐어요. 키 이름만 다를 뿐 구조는 거의 같아서, 한쪽을 익히면 다른 쪽도 금방 적응할 수 있죠.
+
+</details>
+
+**Q6. 응용 시나리오! 여러분 회사에서 (1) 단일 에이전트가 사내 DB와 파일시스템에 접근해야 하고, (2) Salesforce 에이전트와 ServiceNow 에이전트가 서로 티켓을 주고받아야 해요. 각각 어떤 프로토콜이 적합할까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: (1)은 MCP, (2)는 A2A예요.
+
+**해설**: 외부 도구/데이터 접근은 MCP의 영역이고, 서로 다른 벤더로 만들어진 에이전트 간 협력은 A2A의 영역이거든요. 본문의 "언제 뭘 써야 하나요?" 가이드 그대로예요. 참고로 AI 코딩 에이전트가 작업하는 저장소라면 AGENTS.md는 항상 두는 게 좋고요.
+
+</details>
+
+**Q7. AGENTS.md는 어떤 문제를 해결하는 표준일까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: AI 코딩 에이전트가 저장소의 빌드/테스트 방법, 코딩 컨벤션, 금지 사항 같은 프로젝트별 규칙을 일관되게 이해하도록 해주는 표준이에요. "에이전트를 위한 README"라고 보면 돼요.
+
+**해설**: 에이전트가 저장소의 규칙을 모르면 엉뚱한 코드를 만들죠. AGENTS.md를 저장소 루트에 두면 Copilot, Cursor, Claude Code, Devin 같은 도구들이 자동으로 읽고 컨벤션을 따르게 돼요. OpenAI가 공개한 뒤 6만 개 이상의 오픈소스 프로젝트가 채택했어요.
+
+</details>
+
+**Q8. 2025년 12월 출범한 AAIF(Agentic AI Foundation)가 AI 프로토콜 역사에서 중요한 이유는 뭘까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: AI 역사상 처음으로 OpenAI, Anthropic, Google 같은 경쟁사들이 같은 재단 아래 모여, MCP·A2A·AGENTS.md 같은 핵심 프로토콜을 중립 거버넌스로 운영하게 됐기 때문이에요.
+
+**해설**: 어느 한 회사도 혼자 프로토콜을 좌우하지 못하게 되면서 표준화가 가속되고, 기업 입장에서는 특정 AI 벤더에 종속될 걱정(벤더 락인)이 줄어들었죠. Anthropic이 MCP를, Google이 A2A를, OpenAI가 AGENTS.md를 각각 기부한 것도 이런 맥락이에요.
+
+</details>

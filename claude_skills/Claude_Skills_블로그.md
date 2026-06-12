@@ -1,5 +1,7 @@
 # Claude Skills: AI 에이전트의 프로그래밍 가능한 미래
 
+> 📊 **발표자료**: [Claude_Skills_발표자료.pptx](./Claude_Skills_발표자료.pptx)
+
 *단순 프롬프트에서 모듈화된 에이전트 시스템으로 (2025-2026)*
 
 ---
@@ -559,3 +561,97 @@ Claude Skills는 AI 에이전트의 "함수 라이브러리"를 만들고 있습
 - [The Complete Guide to Building Skills for Claude](https://resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf). Anthropic Resources.
 - [SkillsBench](https://www.skillsbench.ai/). Official Website.
 - [Skill-Inject](https://www.skill-inject.com/). Official Website.
+
+---
+
+## 📝 학습 퀴즈
+
+지금까지 읽은 내용, 얼마나 기억나는지 가볍게 점검해 보세요. 답을 먼저 생각해 본 다음 "정답 보기"를 눌러 확인하면 돼요.
+
+**Q1. Claude Skills의 핵심 설계 원칙인 Progressive Disclosure는 어떤 방식으로 동작하나요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 정보를 3단계(메타데이터 → SKILL.md 바디 → 참조 파일)로 나누어, 필요한 시점에 필요한 만큼만 컨텍스트에 로드하는 방식이에요.
+
+**해설**: 처음에는 스킬 사용 시점만 판단할 수 있는 최소한의 메타데이터만 올라가 있어요. 태스크와 관련 있다고 판단되면 SKILL.md 전체를 로드하고, 추가 파일은 실제로 접근되기 전까지 컨텍스트를 전혀 소비하지 않죠. 덕분에 토큰 효율성이 극대화되는 거예요.
+
+</details>
+
+**Q2. OX 퀴즈: 모델이 스스로 생성한 스킬도 큐레이션된 스킬만큼 성능 향상 효과가 있다.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X예요.
+
+**해설**: SkillsBench 연구에서 가장 충격적인 발견인데요, 자체 생성 스킬은 평균적으로 아무런 이점이 없었어요. 모델이 스스로 소비해서 이득을 보는 절차적 지식을 작성하지 못한다는 뜻이라, 전문가가 큐레이션한 스킬이 필수적이라는 시사점을 주죠.
+
+</details>
+
+**Q3. Claude Skills와 MCP의 역할 차이를 한 문장으로 구분하면 어떻게 되나요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Skills는 "어떻게(HOW)" 작업하는지를 가르치고, MCP는 "무엇에(WHAT)" 접근할지를 제공해요.
+
+**해설**: MCP가 Jira API 같은 외부 시스템 연결을 제공한다면, Skill은 그 연결을 활용해 티켓을 만드는 회사 표준 워크플로우를 알려주는 식이에요. 경쟁 관계가 아니라 서로 보완하며 함께 작동하는 구조죠.
+
+</details>
+
+**Q4. 스킬 파일을 통한 보안 위협이 심각하다고 평가받는 이유는 무엇인가요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 커뮤니티 스킬의 상당수에서 취약점이 발견됐고, 스킬 파일을 통한 인젝션 공격이 프론티어 모델에서도 높은 성공률(최대 80%)을 보였기 때문이에요.
+
+**해설**: 연구에 따르면 커뮤니티 기여 스킬의 26.1%에 취약점이 있었고, Skill-Inject 연구에서는 데이터 유출이나 랜섬웨어 유사 행동까지 유도할 수 있었어요. 게다가 모델 스케일링이나 단순 입력 필터링으로는 해결이 안 되고, 컨텍스트 인식 인증 프레임워크가 필요하다는 결론이 나왔죠.
+
+</details>
+
+**Q5. "스킬을 갖춘 작은 모델"이 주목받는 이유는 무엇인가요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 스킬을 장착한 작은 모델이 스킬 없는 큰 모델의 성능을 따라잡을 수 있어서, 비용 효율적인 배포 전략이 가능하기 때문이에요.
+
+**해설**: SkillsBench 연구의 또 다른 흥미로운 발견인데요, 큰 모델 비용을 절감하면서도 경쟁력 있는 결과를 낼 수 있다는 뜻이에요. 로컬에서 돌릴 수 있는 작은 모델에 전문가가 큐레이션한 스킬 라이브러리를 더하면 실용적이고 강력한 에이전트가 되는 거죠.
+
+</details>
+
+**Q6. 모든 스킬의 핵심인 SKILL.md 파일에서 반드시 있어야 하는 두 가지 구성 요소는 무엇인가요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: YAML Frontmatter(name, description 등)와 Markdown 본문이에요.
+
+**해설**: Frontmatter에는 스킬 이름과 설명 같은 메타데이터가 들어가고, 본문에는 형식 제한 없이 지침과 예시를 자유롭게 작성할 수 있어요. 스크립트나 참조 문서, 템플릿 같은 지원 파일은 선택사항으로 폴더에 함께 넣을 수 있죠.
+
+</details>
+
+**Q7. 응용 시나리오: 회사에서 매번 같은 형식의 주간 보고서를 작성하는 작업을 AI 에이전트에게 맡기려고 해요. Skills 관점에서 어떤 접근이 좋을까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 보고서 작성 절차와 형식, 템플릿을 담은 스킬을 한 번 만들어두고, 필요할 때마다 에이전트가 불러오게 하는 거예요.
+
+**해설**: 매번 긴 프롬프트를 다시 쓰는 프롬프트 엔지니어링 방식은 컨텍스트 낭비와 일관성 부족 문제가 있는데요, 반복 워크플로우를 재사용 가능한 모듈로 캡슐화하는 건 Skills의 대표적인 사용 사례예요. Progressive disclosure 덕분에 일관된 결과를 효율적으로 얻을 수 있죠.
+
+</details>
+
+**Q8. OX 퀴즈: Agent Skills는 Anthropic 전용 기능이라 Claude 제품에서만 사용할 수 있다.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X예요.
+
+**해설**: Anthropic은 2025년 12월에 Agent Skills를 오픈 스탠다드로 발표했어요. 같은 스킬 형식이 표준을 채택한 어떤 AI 플랫폼과 도구에서도 작동하고, 실제로 Microsoft, OpenAI 같은 경쟁사를 포함해 Figma, GitHub, Notion 등 여러 조직이 초기에 채택했죠.
+
+</details>

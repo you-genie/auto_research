@@ -1,5 +1,7 @@
 # Test Time Training & Fast Weights: 추론할 때도 배우는 AI의 등장
 
+> 📊 **발표자료**: [ttt-fast-weights-presentation.pptx](./ttt-fast-weights-presentation.pptx)
+
 > "The key idea is to make the hidden state a machine learning model itself, and the update rule a step of self-supervised learning."
 > — Yu Sun et al., *Learning to (Learn at Test Time)*, 2024
 
@@ -400,3 +402,97 @@ Test Time Training과 Fast Weights는 단순한 아이디어 하나에서 출발
 8. [Yu Sun et al. (2023). Test-Time Training on Video Streams. arXiv:2307.05014](https://arxiv.org/abs/2307.05014)
 9. [Yingfa Chen (2025). The Rise of Test-Time Training.](https://chen-yingfa.github.io/research_posts/2025-rise-of-ttt/)
 10. [Google Research Blog (2025). Titans + MIRAS: Helping AI have long-term memory.](https://research.google/blog/titans-miras-helping-ai-have-long-term-memory/)
+
+---
+
+## 📝 학습 퀴즈
+
+지금까지 읽은 내용, 얼마나 기억나는지 가볍게 점검해 보세요. 답을 먼저 생각해 본 다음 "정답 보기"를 눌러 확인하면 돼요.
+
+**Q1. TTT(Test Time Training)의 가장 핵심적인 아이디어는 뭘까요? 기존 RNN과 비교해서 설명해 보세요.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: RNN의 히든 스테이트를 단순한 벡터가 아니라 그 자체로 작은 ML 모델(가중치 W_t)로 만들고, 업데이트 규칙을 자기지도학습의 경사하강법 한 스텝으로 바꾼 것
+
+**해설**: 기존 RNN은 고정된 함수 `h_t = f(h_{t-1}, x_t)`로 히든 스테이트를 업데이트하는데요, TTT는 `W_t = W_{t-1} - η∇ℓ(W_{t-1}; x_t)`처럼 매 토큰마다 경사하강법으로 내부 모델을 학습시켜요. 그래서 추론 중에도 모델이 새 문맥에 계속 적응할 수 있는 거죠.
+
+</details>
+
+**Q2. OX 문제예요. "TTT는 2024년에 완전히 새롭게 등장한 아이디어로, 그 이전에는 비슷한 개념이 전혀 없었다." 맞을까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X
+
+**해설**: TTT의 뿌리는 1987년 Hinton과 Plaut의 Fast Weights 논문까지 거슬러 올라가요. 천천히 업데이트되는 Slow Weights와 최근 경험에 빠르게 반응하는 Fast Weights를 구분하는 아이디어였죠. 2016년에는 Ba et al.이 이 개념을 현대 딥러닝에 적용했고, TTT는 "테스트 데이터 자체가 가장 관련성 높은 데이터"라는 관점으로 이를 한층 발전시킨 거예요.
+
+</details>
+
+**Q3. Transformer, RNN(Mamba 등), TTT 세 가지를 '복잡도'와 '긴 컨텍스트 성능' 관점에서 비교하면 각각 어떤 특징이 있을까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Transformer는 O(n²) 복잡도지만 긴 컨텍스트 성능이 뛰어나고, RNN은 O(n)으로 빠르지만 긴 컨텍스트에서 성능이 정체되며, TTT는 O(n) 복잡도이면서도 컨텍스트가 길어질수록 성능이 계속 향상돼요
+
+**해설**: Transformer는 컨텍스트가 2배 늘면 연산량이 4배가 되는 이차 복잡도가 약점이고, Mamba 같은 RNN은 고정 크기 히든 스테이트의 표현력 한계 때문에 16k 토큰 이후 성능이 정체되는 경향이 있어요. TTT는 히든 스테이트가 학습 가능한 모델이라 선형 복잡도를 유지하면서도 더 많은 토큰을 볼수록 perplexity를 계속 낮출 수 있다는 게 핵심 매력이죠.
+
+</details>
+
+**Q4. TTT의 이중 루프(bilevel) 최적화에서 외부 루프와 내부 루프는 각각 무슨 역할을 할까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 외부 루프는 학습 시 다음 토큰 예측 손실로 θ_K, θ_V, θ_Q 같은 프로젝션을 학습해 자기지도 과제의 방향을 정하고, 내부 루프는 추론 시 각 토큰에 대해 자기지도 손실로 W_t를 업데이트해요
+
+**해설**: 외부 루프가 "어떻게 배워야 추론에 도움이 될지"를 미리 메타학습해 두기 때문에, 내부 루프가 새 시퀀스에 빠르게 적응할 수 있는 구조예요. 재구성 과제 자체도 학습된다는 점이 포인트인데요, 손으로 설계한 고정 규칙이 아니라는 게 기존 RNN과의 큰 차이죠.
+
+</details>
+
+**Q5. OX 문제예요. "TTT 프레임워크 관점에서 보면 선형 어텐션과 Self-Attention도 TTT의 특수한 케이스로 해석할 수 있다." 맞을까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: O
+
+**해설**: 내부 모델을 단순 선형 변환으로 두고 배치 경사하강법을 쓰면 선형 어텐션과 수학적으로 동치이고, 비모수 학습기(Nadaraya-Watson estimator)를 내부 모델로 쓰면 Self-Attention과 동치임이 증명됐어요. 그래서 TTT는 기존 아키텍처들을 하나의 틀로 통합하는 시각을 제공한다고 하죠.
+
+</details>
+
+**Q6. 구글의 Titans 아키텍처는 세 가지 메모리 모듈을 결합하는데요, 각각 무엇이고 장기 메모리는 어떤 기준으로 정보를 저장할까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Core Module(단기 기억, 제한된 윈도우 어텐션), Long-Term Memory(장기 기억, 테스트 타임에 학습되는 신경망), Persistent Memory(영구 지식, 데이터 독립적)로 구성되고, 장기 메모리는 새롭고 놀라운(서프라이즈가 높은) 정보만 선택적으로 저장해요
+
+**해설**: Titans는 컨텍스트 윈도우를 데이터셋처럼 취급해서 미니 경사하강법 루프를 돌리는데요, 이미 알고 있는 낮은 서프라이즈 정보는 굳이 다시 저장하지 않아요. 이런 선택적 저장 덕분에 2M 토큰 이상의 컨텍스트에서도 빠르고 효율적으로 동작할 수 있는 거죠.
+
+</details>
+
+**Q7. 기존 TTT 구현의 GPU 활용률이 매우 낮았던 이유는 뭐고, LaCT는 이 문제를 어떻게 해결했을까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 토큰 16~64개 단위의 작은 미니배치로 빈번하게 가중치를 업데이트하는 방식이 GPU 병렬화에 맞지 않아서였고, LaCT는 청크 크기를 2048~1M 토큰까지 크게 늘리고 청크 내 로컬 의존성은 윈도우 어텐션으로 처리해서 해결했어요
+
+**해설**: 기존 방식은 GPU 활용률이 5% 미만이었는데, LaCT는 대형 청크 전략으로 70% 이상까지 끌어올렸어요. 큰 청크로 병렬화를 극대화하되, 청크 안의 세밀한 의존성은 윈도우 어텐션에게 맡기는 역할 분담이 핵심이에요.
+
+</details>
+
+**Q8. 응용 시나리오예요. 여러분이 수백만 토큰짜리 초장문 문서를 처리하는 서비스를 설계한다면, 본문 내용을 근거로 어떤 아키텍처 방향이 현실적일까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 완전한 TTT 모델보다는 Transformer와 TTT 레이어를 혼합한 하이브리드 아키텍처가 현실적이에요. 단기 의존성은 로컬 어텐션으로, 장기 의존성은 TTT로 처리하는 식이죠
+
+**해설**: 풀 어텐션은 O(n²) 때문에 수백만 토큰에서 사실상 불가능에 가깝고, TTT는 아직 생태계와 구현 성숙도가 부족해요. 그래서 본문의 향후 전망에서도 하이브리드가 현실적인 방향으로 제시됐는데요, 실제로 E2E-TTT는 2M 컨텍스트에서 풀 어텐션 대비 35배 빠른 추론을 보여주면서 이 방향의 가능성을 입증했어요.
+
+</details>
