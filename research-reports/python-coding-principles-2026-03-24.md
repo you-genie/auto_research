@@ -2471,3 +2471,101 @@ class PythonDeveloper:
 **작성:** 2026년 3월 24일  
 **최종 수정:** 최신 Python 3.14 및 2025-2026 트렌드 반영  
 **상태:** ✅ 완성
+
+---
+
+## 📝 학습 퀴즈
+
+지금까지 읽은 내용, 얼마나 기억나는지 가볍게 점검해 보세요. 답을 먼저 생각해 본 다음 "정답 보기"를 눌러 확인하면 돼요.
+
+**Q1. SOLID의 'O'에 해당하는 개방-폐쇄 원칙(OCP)은 "확장에는 열려 있고 수정에는 닫혀 있어야 한다"고 말합니다. 새로운 결제 방식을 추가할 때 기존 `PaymentProcessor` 코드를 건드리지 않으려면 어떤 설계를 쓰는 게 좋을까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 결제 방식마다 공통 추상 인터페이스(`PaymentStrategy`)를 정의하고, 각 결제 수단을 그 인터페이스의 구현체로 분리하는 전략 패턴을 사용합니다.
+
+**해설**: 본문에서는 `if payment_type == ...` 식으로 분기하면 새 결제 수단이 생길 때마다 기존 코드를 고쳐야 한다고 지적합니다. 추상 `PaymentStrategy`를 두고 `ApplePayPayment` 같은 새 클래스만 추가하면 기존 코드 수정 없이 기능을 확장할 수 있어, 변경 위험과 버그 가능성이 줄어듭니다.
+
+</details>
+
+**Q2. (OX) 리스코프 치환 원칙(LSP)에 따르면, `Square`가 `Rectangle`을 상속받아 `set_width`가 높이까지 바꾸도록 구현하는 것은 좋은 설계다.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X (잘못된 설계)
+
+**해설**: 본문의 나쁜 예에서 `Square`가 `Rectangle`을 상속하면서 너비를 바꿀 때 높이까지 함께 바꾸면, `Rectangle`을 기대하는 코드(`set_width(5)` 후 `set_height(10)`이면 넓이 50)가 깨집니다. 올바른 해법은 둘 다 공통 `Shape`를 상속하게 만들어 어떤 하위 타입으로도 안전하게 교체할 수 있게 하는 것입니다.
+
+</details>
+
+**Q3. DRY, KISS, YAGNI는 종종 충돌합니다. "딱 두 곳에서만 반복되는 코드"를 발견했을 때, 본문이 권하는 우선순위는 무엇인가요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: YAGNI를 DRY보다 우선해서, 지금 당장 공통 함수로 추출하지 않고 그대로 둡니다.
+
+**해설**: 본문 13장에서는 두 곳뿐인 반복을 성급히 추상화하면 과도 설계가 된다고 봅니다. 반면 다섯 곳처럼 명확한 중복이라면 DRY가 YAGNI보다 우선합니다. 즉 반복의 "정도"에 따라 우선순위가 달라진다는 점이 핵심입니다.
+
+</details>
+
+**Q4. 가변 기본 인자(Mutable Default Argument) 안티패턴은 왜 위험하며, 어떻게 고치나요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 기본값으로 쓴 리스트가 함수 호출 사이에 공유되어 이전 호출의 값이 누적됩니다. 기본값을 `None`으로 두고 함수 안에서 `if target_list is None: target_list = []`로 새 리스트를 만들어 해결합니다.
+
+**해설**: 본문 예제에서 `def append_to_list(item, target_list=[])`는 `[1]`, `[1, 2]`, `[1, 2, 3]`처럼 이전 호출의 영향을 받습니다. 기본값은 함수 정의 시점에 한 번만 생성되어 계속 재사용되기 때문입니다. `None`을 기본값으로 쓰면 매 호출마다 새 리스트가 만들어집니다.
+
+</details>
+
+**Q5. (비교) I/O 바운드 작업과 CPU 바운드 작업에는 각각 어떤 동시성 방식이 적합한가요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: I/O 바운드에는 Asyncio나 멀티스레딩(`ThreadPoolExecutor`)이, CPU 바운드에는 멀티프로세싱(`ProcessPoolExecutor`)이 적합합니다.
+
+**해설**: 본문 10.3절에 따르면 네트워크 요청처럼 기다림이 많은 I/O 작업은 Asyncio/스레드로 효율을 높일 수 있습니다. 반면 계산이 무거운 CPU 작업은 GIL 때문에 스레드로는 한계가 있어 별도 프로세스를 쓰는 멀티프로세싱이 유리합니다. 다만 Python 3.13+의 자유 스레딩(Free-threading)이 보급되면 이 구도가 바뀔 수 있습니다.
+
+</details>
+
+**Q6. Zen of Python의 "Errors should never pass silently(에러는 조용히 넘어가서는 안 된다)"는 격언과 관련해, 본문이 지적하는 나쁜 예외 처리 방식은 무엇인가요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: `except:` 또는 `except Exception:`으로 모든 예외를 잡고 `pass`하거나 어떤 오류인지 모른 채 넘어가는 방식입니다.
+
+**해설**: 본문 안티패턴 절에서는 너무 넓은 예외를 잡거나 예외 정보를 받지 않는 코드를 비판합니다. 대신 `ValueError`, `IOError`처럼 구체적인 예외를 잡고, `except Exception as e`로 정보를 활용하며, 처리할 수 없으면 `raise`로 재발생시키라고 권합니다.
+
+</details>
+
+**Q7. (응용) 다음 코드를 본문의 원칙에 따라 개선한다면 어떤 점을 바꿔야 할까요?**
+
+```python
+result = [x for x in list1 if not any(x in list2 for _ in range(len(list2)))]
+```
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: `list2`를 한 번만 `set`으로 변환한 뒤 `x not in list2_set`로 검사하도록 바꿉니다. 동시에 의미 있는 이름의 함수로 분리해 가독성을 높입니다.
+
+**해설**: 본문 13.2절은 가독성을 성능보다 우선하라고 하면서, 위 한 줄짜리 코드를 `filter_values`라는 명확한 함수로 풀어냅니다. 또한 리스트 검색은 O(n)이지만 집합 검색은 O(1)이므로, `set`으로 변환하면 가독성과 성능을 모두 챙길 수 있습니다.
+
+</details>
+
+**Q8. 원칙들이 충돌할 때 본문이 제시하는 우선순위 순서는 무엇인가요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 가독성(Readability) → 정확성(Correctness) → 성능(Performance) → 아키텍처 원칙(SOLID 등) 순입니다.
+
+**해설**: 본문 13.1절은 이 순서를 명시합니다. 먼저 읽기 쉬운지, 그다음 동작이 정확한지, 그 후 성능이 문제인지를 따지고, 마지막으로 SOLID/Clean Code 같은 아키텍처 원칙을 적용하되 가독성을 해치지 않는 범위에서 적용하라고 강조합니다.
+
+</details>

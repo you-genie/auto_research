@@ -1169,3 +1169,97 @@ Code → Preferences → Settings Sync
 **최신 정보:** 2026년 초 기준  
 **다음 업데이트:** 2026년 6월 (GPT-5 출시 시)
 
+---
+
+## 📝 학습 퀴즈
+
+지금까지 읽은 내용, 얼마나 기억나는지 가볍게 점검해 보세요. 답을 먼저 생각해 본 다음 "정답 보기"를 눌러 확인하면 돼요.
+
+**Q1. 2026년 개발자 커뮤니티에서 "most loved"로 가장 높은 평가를 받은 AI 코딩 도구는 무엇이고, 그 비결로 꼽히는 점은 무엇일까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Claude Code (46% "most loved")
+
+**해설**: Claude Code는 2025년 5월 출시 후 8개월 만에 46% "most loved" 평가를 받으며 Cursor(19%), Copilot(9%)를 앞섰어요. 커뮤니티는 그 비결로 "최고의 협력자"라 불릴 만한 협업 능력, 고정 구독에 따른 비용 효율성, 그리고 오류가 적은 정확성을 꼽았습니다.
+
+</details>
+
+**Q2. "다중 도구(multi-tool) 전략은 일부 마니아만 쓰는 방식이다." 맞을까요, 틀릴까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 틀림 (X)
+
+**해설**: 본문에 따르면 87%의 개발자가 2개 이상의 AI 도구를 동시에 사용하며, 특히 Cursor + Claude Code + Windsurf 조합이 가장 인기예요. 결론에서도 "다중 도구 전략이 표준"이며 "절대 한 도구에만 의존하지 마라"고 강조합니다.
+
+</details>
+
+**Q3. Ghostty와 Warp는 둘 다 주목받는 터미널인데, AI 기능과 성능 측면에서 어떻게 대비되나요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Warp는 내장 AI 에이전트로 AI 기능이 강하지만 Electron 기반이라 메모리 사용량이 높고, Ghostty는 GPU 렌더링으로 성능과 메모리 효율이 최고지만 AI 기능이 없다.
+
+**해설**: Warp는 Warp CLI Agent를 내장해 명령어 생성·디버깅 등 AI 기능이 뛰어나지만 약 380MB의 높은 메모리를 쓰는 무거운 편입니다. 반면 Ghostty는 GPU 기반 렌더링으로 가장 빠른 터미널로 꼽히고 메모리도 최소지만, 2026년 현재 AI 기능이 없어 AI 에이전트의 클라이언트 역할로만 조합됩니다.
+
+</details>
+
+**Q4. IDE 호환성 측면에서 GitHub Copilot, Cursor, Claude Code의 차이를 설명해 보세요.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Copilot은 거의 모든 주요 IDE를 지원하고, Cursor는 VS Code(자체 포크)에서만 동작하며, Claude Code는 터미널 기반이라 IDE가 없다.
+
+**해설**: 비교표에서 Copilot은 VS Code·JetBrains·Neovim·Visual Studio 등 모든 IDE를 지원해 호환성이 가장 넓어요. Cursor는 VS Code를 포크한 독자 IDE라 다른 에디터에서는 쓸 수 없고, Claude Code는 터미널에서 자율 실행되는 에이전트라 시각적 IDE 없이 동작합니다.
+
+</details>
+
+**Q5. 코드를 외부 서버로 전송하지 않는 완전 로컬·무료 환경을 원한다면 어떤 조합이 추천되나요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Ollama(로컬 LLM 런타임) + Cline 같은 로컬 도구 조합
+
+**해설**: Ollama는 1-command 설치로 Llama·Qwen·Mistral 등을 로컬에서 실행하며 클라우드로 데이터를 보내지 않아요. 의사결정 트리에서도 보안·프라이버시가 최우선이거나 로컬 GPU가 있는 경우 "Ollama + Cline + Local LLM" 조합을 추천하며, 비용은 GPU 하드웨어만 있으면 $0입니다.
+
+</details>
+
+**Q6. 본문에서 "가장 효과적"이라고 꼽은 워크플로우 패턴은 무엇이며, 그 효과의 이유는 무엇일까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Spec-First (명세 우선) 패턴
+
+**해설**: 상세한 명세를 먼저 작성해 AI에 한 번에 전달하면 정확도 약 95%에 변경사항도 최소화된다고 해요. 이유는 AI가 명확한 요구사항 앞에서는 불필요한 창의성을 발휘하지 않고 명세에 충실하게 구현하기 때문입니다.
+
+</details>
+
+**Q7. AI 도구 도입 효과를 측정할 때 본문이 권장하는 지표 프레임워크는 무엇이고, 대표 지표 두 가지를 들어 보세요.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: DORA Metrics. 대표 지표로 Deployment Frequency(배포 빈도), Lead Time for Changes(변경 리드 타임), Change Failure Rate(변경 실패율), MTTR(평균 복구 시간) 등이 있다.
+
+**해설**: 본문은 AI 도구 도입 후 효과를 객관적으로 보려면 DORA Metrics로 기준선을 잡으라고 권합니다. 예를 들어 배포 빈도는 주간에서 일일로, 변경 실패율은 10%에서 2%로, MTTR은 4시간에서 30분으로 개선하는 식의 목표를 제시했어요.
+
+</details>
+
+**Q8. Windsurf는 "most loved" 순위는 낮았지만 본문에서 인정받은 강점이 있어요. 강점과 함께, 발목을 잡은 한계는 무엇이었나요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 강점은 가격 대비 기능(Cursor의 약 75% 가격에 80% 기능)과 프로젝트 히스토리를 기억하는 Flows이고, 한계는 로그인 오류·신용(크레딧) 낭비 등 불안정성이다.
+
+**해설**: Windsurf는 Cascade 에이전트와 Flows라는 비전 있는 기능으로 가성비가 뛰어나다는 평가를 받았어요. 다만 Trustpilot 1-star 리뷰가 많을 만큼 불안정성과 크레딧 낭비, 로그인 오류가 발목을 잡아 "비전은 훌륭하지만 실행은 부족하다"는 평을 들었습니다.
+
+</details>
+

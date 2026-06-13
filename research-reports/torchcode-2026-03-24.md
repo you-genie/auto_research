@@ -503,3 +503,97 @@ LLM 생성과 최적화 기법들
 **보고서 작성일**: 2026년 3월 24일  
 **데이터 수집 기준**: 2026년 3월 초 기준  
 **플랫폼 버전**: 0.1.x (활발한 개발 중)
+
+---
+
+## 📝 학습 퀴즈
+
+지금까지 읽은 내용, 얼마나 기억나는지 가볍게 점검해 보세요. 답을 먼저 생각해 본 다음 "정답 보기"를 눌러 확인하면 돼요.
+
+**Q1. Torchcode를 한마디로 표현하면 "LeetCode for PyTorch"라고 합니다. 그렇다면 Torchcode가 LeetCode와 달리 집중하는 핵심 목표는 무엇일까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 일반 알고리즘/자료구조 문제 풀이가 아니라, 신경망 연산자와 복잡한 아키텍처를 PyTorch로 처음부터 직접 구현하는 ML 엔지니어링 스킬 습득.
+
+**해설**: Torchcode는 Meta, Google DeepMind, OpenAI 같은 톱 테크 회사가 요구하는 ML 엔지니어링 역량에 특화되어 있어요. "논문을 읽는 것만으로는 부족하며 실제 코드 작성 능력을 강화"한다는 가치 제안처럼, 깊이 있는 구현 이해가 핵심입니다.
+
+</details>
+
+**Q2. (OX) Torchcode를 제대로 활용하려면 GPU와 클라우드 가입이 반드시 필요하다.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: X (거짓)
+
+**해설**: Torchcode는 완전 무료 오픈소스(Apache 2.0)이며 CPU만으로 충분하고 클라우드 가입도 필요 없어요. 로컬 Docker, Hugging Face Spaces, Google Colab 등 여러 방식으로 접근할 수 있고 모두 무료입니다.
+
+</details>
+
+**Q3. 자동 심판(Auto-Grader)이 단순히 출력값이 맞는지만 확인하지 않는다는 점이 Torchcode의 강점입니다. 출력 정확도 외에 자동 심판이 검증하는 항목을 두 가지 이상 들어보세요.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 그래디언트 흐름(자동미분 검증), 형태(Shape) 일관성, 엣지 케이스 및 수치적 안정성.
+
+**해설**: 자동 심판은 torch.allclose로 출력 정확도를 확인하는 것에 더해 그래디언트 흐름, Shape 일관성, 수치적 안정성까지 검증해요. 특히 그래디언트 검증 덕분에 수학적 정확성까지 자동으로 보장된다는 점이 차별화 요소입니다.
+
+</details>
+
+**Q4. Torchcode의 4주 학습 경로에서 Scaled Dot-Product Attention, Multi-Head Attention, RoPE, Flash Attention 같은 문제들은 주로 몇 주차에 배치되어 있을까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: Week 2 (Attention 심화).
+
+**해설**: Week 1은 기초(ReLU, Softmax, LayerNorm 등), Week 2는 Transformer의 핵심인 Attention 메커니즘, Week 3는 아키텍처+훈련, Week 4는 추론+고급 기법으로 단계가 나뉘어 있어요. Attention 계열 문제는 Week 2에 집중되어 있습니다.
+
+</details>
+
+**Q5. 문제 빈도 표시 중 🔥 "Very Likely"와 💡 "Emerging / Differentiator"는 의미가 다릅니다. 두 표시의 차이를 설명해 보세요.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 🔥 Very Likely는 인터뷰에서 자주 출제되는 핵심 문제이고, 💡 Emerging은 최신 기술이라 고급 역할에서 차별화 요소가 되는 문제입니다.
+
+**해설**: 🔥는 ReLU, Scaled Dot-Product Attention처럼 출제 확률이 매우 높은 단골 문제예요. 반면 💡는 Flash Attention, Speculative Decoding, DPO/GRPO/PPO Loss처럼 최신 기술로, 고급 직무를 노릴 때 차별화에 도움이 되는 문제들입니다.
+
+</details>
+
+**Q6. 비교 관점에서, 문제 수만 보면 Torchcode(40개)가 LeetCode(2,500+개)보다 훨씬 적습니다. 그럼에도 Torchcode가 ML 엔지니어 지원자에게 유리할 수 있는 이유는 무엇일까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 문제 수는 적지만 ML/AI 인터뷰에 정확히 맞춘 큐레이션된 커리큘럼이고, RoPE·Flash Attention·GQA 같은 최신 기술과 깊이 있는 구현 이해에 집중하기 때문.
+
+**해설**: LeetCode는 전체 소프트웨어 엔지니어를 대상으로 한 방대한 알고리즘 데이터베이스인 반면, Torchcode는 PyTorch 구현에 특화된 40개를 엄선했어요. 양보다 ML 분야 적합성과 깊이로 승부하는 것이 차별점입니다.
+
+</details>
+
+**Q7. (응용) 친구가 "다음 주에 당장 일반 코딩 테스트(자료구조/알고리즘) 인터뷰가 있어서 급하게 준비해야 해"라고 합니다. 이 친구에게 Torchcode를 추천하는 것이 적절할까요? 이유와 함께 답해 보세요.**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 적절하지 않습니다. 자료구조/알고리즘 인터뷰라면 LeetCode가 맞고, Torchcode는 4주·12-16시간이 드는 ML 구현 특화 플랫폼이라 급한 일반 코테 준비에는 부적합합니다.
+
+**해설**: 본문의 "비추천 대상"에 따르면 LeetCode 스타일 알고리즘 준비나 3-4주 내 급한 준비에는 Torchcode가 맞지 않아요. Torchcode는 ML 엔지니어 인터뷰, PyTorch 심화 학습, 시간 여유가 있는 경우에 가장 빛을 발합니다.
+
+</details>
+
+**Q8. Torchcode의 단점으로 자주 지적되는 "지속가능성 리스크"가 있습니다. 운영 측면에서 어떤 구조적 약점 때문일까요?**
+
+<details markdown="1">
+<summary>✅ 정답 보기</summary>
+
+**정답**: 단일 개발자(Duo An) 의존도가 높은 1인 프로젝트라는 점.
+
+**해설**: 본문은 단일 개발자 프로젝트라 의존도가 높고, 아직 0.1.1 초기 버전이라 버그 가능성이 있으며, 문서가 README와 wiki 정도로 부족하다는 점을 운영상 약점으로 꼽아요. 신규 플랫폼 특유의 성숙도 리스크와 맞물리는 부분입니다.
+
+</details>
