@@ -49,3 +49,10 @@ tmpclaude-*
 
 # Reflex
 .web/
+
+# Firebase / misc
+firebase-debug.log
+*-debug.log
+
+# Embedded research repo (separate git project)
+iris-research/
