@@ -297,6 +297,20 @@ GAIA, SWE-Bench, MATH, Agent Security Benchmark 등 기존 4개 벤치마크를 
 
 표준 아랍어가 아닌 4개 아랍어 방언에서의 비전-언어 이해 능력을 평가하는 벤치마크를 소개합니다. 저자원(low-resource) 언어와 멀티모달 연구의 교차점을 개척합니다.
 
+### 6-6. 멀티모달·비-LLM 주목 논문
+
+ACL 2026 채택 논문은 LLM 에이전트·안전성·추론에 크게 쏠려 있지만, 그 사이로 "결이 다른" 멀티모달·인접 분야 연구들이 눈에 띕니다. LLM 텍스트 추론과 달리, 이미지·신체 동작·취향 같은 **텍스트 밖 신호**를 다룬다는 점에서 흥미롭습니다.
+
+**What Do Vision-Language Models Encode for Personalized Image Aesthetics Assessment?**
+([arXiv:2604.11374](https://arxiv.org/abs/2604.11374), [Findings of ACL 2026](https://aclanthology.org/events/findings-2026/))
+
+비전-언어 모델(VLM) 내부가 사람마다 다른 미적 취향을 인코딩하는지를 선형 프로빙으로 분석합니다. 파인튜닝 없이 사용자당 소수 이미지만으로 개인화 미학 평가가 가능함을 보입니다.
+
+**I see what you mean: Co-Speech Gestures for Reference Resolution in Multimodal Dialogue**
+([arXiv:2503.00071](https://arxiv.org/abs/2503.00071))
+
+대화 중 말과 함께 나오는 손동작(co-speech gesture)을 단서로 "그거/저쪽" 같은 지시어를 해소합니다. 제스처 단독으로도 정보가 있으며 음성과 결합하면 정확도가 더 올라간다는 점을 실증합니다.
+
 ---
 
 ## 7. 워크숍·튜토리얼로 보는 핫 토픽
