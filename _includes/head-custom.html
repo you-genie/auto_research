@@ -14,4 +14,57 @@
   details { margin: 0.8em 0; padding: 0.6em 1em; border: 1px solid #dce6f0; border-radius: 6px; background: #f7fafc; }
   details summary { cursor: pointer; font-weight: 600; color: #1F4E79; }
   details[open] summary { margin-bottom: 0.6em; }
+
+  /* ===== Auto Research — 가독성 향상 스타일 (Cayman 테마 위 additive) ===== */
+  .main-content { font-size: 16.5px; line-height: 1.78; color: #24303c; }
+  @media (min-width: 64em){ .main-content { max-width: 64rem; } }
+  .main-content h1 { line-height: 1.25; }
+  .main-content h2 { color:#1F4E79; border-bottom:2px solid #e6ecf2; padding-bottom:.3em; margin-top:2.1em; }
+  .main-content h3 { color:#2F5496; margin-top:1.7em; }
+  .main-content h4 { color:#3a5a80; }
+  .main-content a { color:#1a66c9; text-decoration:none; }
+  .main-content a:hover { text-decoration:underline; }
+  .main-content strong { color:#1a2a3a; }
+
+  /* 표 */
+  .main-content table { display:block; overflow-x:auto; border-collapse:collapse; width:100%;
+    box-shadow:0 1px 4px rgba(16,42,67,.10); border-radius:8px; font-size:.93em; margin:1.3em 0; }
+  .main-content table th { background:#1F4E79; color:#fff; font-weight:600; text-align:left; }
+  .main-content table th, .main-content table td { border:1px solid #e3e9f0; padding:.55em .8em; vertical-align:top; }
+  .main-content table tr:nth-child(2n){ background:#f6f9fc; }
+  .main-content table tr:hover{ background:#eaf3fc; }
+
+  /* 인용 -> 카드 */
+  .main-content blockquote { border-left:4px solid #4a7fb5; background:#f2f7fb; margin:1.3em 0;
+    padding:.85em 1.15em; color:#33475b; border-radius:0 8px 8px 0; }
+  .main-content blockquote p { margin:.35em 0; }
+
+  /* 코드 */
+  .main-content pre { background:#0f1b2d; border-radius:10px; padding:1em 1.2em; overflow-x:auto;
+    box-shadow:0 3px 12px rgba(16,42,67,.18); }
+  .main-content pre code { color:#e6edf3; background:transparent; padding:0; }
+  .main-content code { background:#eef2f7; color:#c0392b; padding:.12em .4em; border-radius:4px; font-size:.9em; }
+
+  .main-content hr { border:0; height:1px; background:linear-gradient(90deg,transparent,#c9d6e5 50%,transparent); margin:2.6em 0; }
+
+  /* 히어로 */
+  .doc-hero{ background:linear-gradient(135deg,#1F4E79 0%,#2b6cb0 100%); color:#fff; border-radius:14px;
+    padding:1.5em 1.8em; margin:1em 0 1.6em; box-shadow:0 8px 24px rgba(31,78,121,.30); }
+  .doc-hero p{ margin:.4em 0; color:#eaf2fb; font-size:1.02em; }
+  .doc-hero strong{ color:#fff; }
+
+  /* 콜아웃 */
+  .callout{ border-radius:10px; padding:.95em 1.2em; margin:1.3em 0; border:1px solid; }
+  .callout p{ margin:.35em 0; }
+  .callout-key{ background:#eef6ff; border-color:#bcd8f4; }
+  .callout-key::before{ content:"💡 핵심"; display:block; font-weight:700; color:#1F4E79; margin-bottom:.35em; }
+  .callout-warn{ background:#fff7ed; border-color:#f3d3a4; }
+  .callout-warn::before{ content:"⚠️ 함정"; display:block; font-weight:700; color:#a05a10; margin-bottom:.35em; }
+
+  /* 목차 */
+  .toc{ background:#f7fafc; border:1px solid #e2e8f0; border-radius:10px; padding:.9em 1.4em 1.1em; margin:1.4em 0; }
+  .toc .toc-title{ color:#1F4E79; font-weight:700; }
+  .toc ol{ margin:.5em 0 0; padding-left:1.3em; columns:2; column-gap:2.2em; }
+  @media (max-width:48em){ .toc ol{ columns:1; } }
+  .toc li{ margin:.15em 0; }
 </style>
