@@ -1,0 +1,909 @@
+<title>에이전트 SDK 비교 리서치 · 2026</title>
+<style>
+  :root {
+    --ground: #F4F6F5;
+    --surface: #FFFFFF;
+    --surface-2: #FAFBFA;
+    --ink: #14181E;
+    --muted: #5A636E;
+    --faint: #8A929C;
+    --line: #E4E7E4;
+    --line-strong: #D3D8D4;
+    --accent: #0E7C6C;
+    --accent-soft: #0E7C6C1a;
+
+    /* family hues (light) */
+    --fam-provider: #0E7C6C;
+    --fam-graph:    #4F5FD1;
+    --fam-role:     #B9781A;
+    --fam-rag:      #C24567;
+    --fam-python:   #3E9A57;
+    --fam-cloud:    #1E86AE;
+
+    --good: #2E8B57;
+    --warn: #C0791C;
+
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Helvetica Neue", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    --mono: "SF Mono", ui-monospace, "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
+
+    --maxw: 1180px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0D1014;
+      --surface: #14191F;
+      --surface-2: #171D24;
+      --ink: #E8ECEF;
+      --muted: #9BA4AE;
+      --faint: #6E7883;
+      --line: rgba(255,255,255,.085);
+      --line-strong: rgba(255,255,255,.16);
+      --accent: #2FD4BE;
+      --accent-soft: #2FD4BE1f;
+
+      --fam-provider: #2FD4BE;
+      --fam-graph:    #8A97F5;
+      --fam-role:     #E0A94A;
+      --fam-rag:      #EC7A97;
+      --fam-python:   #6FCB85;
+      --fam-cloud:    #56B7DB;
+
+      --good: #57C98A;
+      --warn: #E0A94A;
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #F4F6F5; --surface: #FFFFFF; --surface-2: #FAFBFA;
+    --ink: #14181E; --muted: #5A636E; --faint: #8A929C;
+    --line: #E4E7E4; --line-strong: #D3D8D4;
+    --accent: #0E7C6C; --accent-soft: #0E7C6C1a;
+    --fam-provider: #0E7C6C; --fam-graph: #4F5FD1; --fam-role: #B9781A;
+    --fam-rag: #C24567; --fam-python: #3E9A57; --fam-cloud: #1E86AE;
+    --good: #2E8B57; --warn: #C0791C;
+  }
+  :root[data-theme="dark"] {
+    --ground: #0D1014; --surface: #14191F; --surface-2: #171D24;
+    --ink: #E8ECEF; --muted: #9BA4AE; --faint: #6E7883;
+    --line: rgba(255,255,255,.085); --line-strong: rgba(255,255,255,.16);
+    --accent: #2FD4BE; --accent-soft: #2FD4BE1f;
+    --fam-provider: #2FD4BE; --fam-graph: #8A97F5; --fam-role: #E0A94A;
+    --fam-rag: #EC7A97; --fam-python: #6FCB85; --fam-cloud: #56B7DB;
+    --good: #57C98A; --warn: #E0A94A;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.6;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .mono { font-family: var(--mono); }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .72rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  /* ---------- header ---------- */
+  header.top {
+    border-bottom: 1px solid var(--line);
+    background:
+      linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  header.top::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 34px 34px;
+    opacity: .5;
+    mask-image: radial-gradient(120% 80% at 88% 0%, #000 0%, transparent 62%);
+    -webkit-mask-image: radial-gradient(120% 80% at 88% 0%, #000 0%, transparent 62%);
+    pointer-events: none;
+  }
+  .top-inner { position: relative; padding: 54px 24px 42px; }
+  .kicker-row {
+    display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: baseline;
+    margin-bottom: 22px;
+  }
+  h1.title {
+    font-size: clamp(2rem, 4.5vw, 3.35rem);
+    line-height: 1.04;
+    letter-spacing: -.025em;
+    font-weight: 800;
+    margin: 0 0 16px;
+    text-wrap: balance;
+    max-width: 15ch;
+  }
+  h1.title .thin { font-weight: 300; color: var(--muted); }
+  .lede {
+    font-size: 1.075rem;
+    color: var(--muted);
+    max-width: 62ch;
+    margin: 0 0 26px;
+  }
+  .meta-strip {
+    display: flex; flex-wrap: wrap; gap: 8px 10px;
+    font-family: var(--mono); font-size: .74rem;
+  }
+  .chip {
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    padding: 4px 11px;
+    color: var(--muted);
+    background: var(--surface);
+  }
+  .chip b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- section scaffolding ---------- */
+  section { padding: 52px 0; border-bottom: 1px solid var(--line); }
+  .sec-head { margin-bottom: 26px; }
+  .sec-head h2 {
+    font-size: clamp(1.35rem, 2.4vw, 1.9rem);
+    letter-spacing: -.02em;
+    font-weight: 750;
+    margin: 8px 0 6px;
+  }
+  .sec-head p { color: var(--muted); margin: 0; max-width: 66ch; }
+
+  /* ---------- legend ---------- */
+  .legend {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px; margin-top: 8px;
+  }
+  .legend-item {
+    display: flex; gap: 11px; align-items: flex-start;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--fam);
+    border-radius: 9px;
+    background: var(--surface);
+  }
+  .legend-item .dot {
+    width: 10px; height: 10px; border-radius: 3px; margin-top: 6px;
+    background: var(--fam); flex: none;
+  }
+  .legend-item .lg-name { font-weight: 650; font-size: .93rem; }
+  .legend-item .lg-desc { color: var(--muted); font-size: .8rem; line-height: 1.45; }
+
+  /* ---------- master table ---------- */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  table.matrix {
+    width: 100%; border-collapse: collapse; min-width: 860px;
+    font-size: .86rem;
+  }
+  table.matrix thead th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: .68rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--faint);
+    padding: 14px 14px;
+    border-bottom: 1px solid var(--line-strong);
+    background: var(--surface-2);
+    position: sticky; top: 0;
+    white-space: nowrap;
+  }
+  table.matrix td {
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  table.matrix tbody tr:last-child td { border-bottom: none; }
+  table.matrix tbody tr:hover td { background: var(--surface-2); }
+  .fw-name { font-weight: 680; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+  .fw-name .dot { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+  .ver { font-family: var(--mono); font-size: .82rem; white-space: nowrap; }
+  .tnum { font-variant-numeric: tabular-nums; }
+  .td-strength { color: var(--muted); min-width: 220px; }
+  .tag-lang { font-family: var(--mono); font-size: .74rem; color: var(--muted); white-space: nowrap; }
+  .lic { font-family: var(--mono); font-size: .74rem; }
+  .lic.mit { color: var(--good); }
+  .lic.apache { color: var(--fam-cloud); }
+  .lic.comm { color: var(--warn); }
+
+  /* ---------- family group + cards ---------- */
+  .fam-group { margin-top: 40px; }
+  .fam-group:first-of-type { margin-top: 8px; }
+  .fam-banner {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--fam);
+  }
+  .fam-banner .fam-badge {
+    font-family: var(--mono); font-size: .68rem; letter-spacing: .12em;
+    text-transform: uppercase; font-weight: 600;
+    color: #fff; background: var(--fam);
+    padding: 4px 9px; border-radius: 5px; white-space: nowrap;
+  }
+  .fam-banner .fam-tag { color: var(--muted); font-size: .88rem; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }
+  .card {
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--fam);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 20px 20px 18px;
+    display: flex; flex-direction: column;
+  }
+  .card h3 {
+    margin: 0 0 2px; font-size: 1.16rem; letter-spacing: -.015em; font-weight: 720;
+  }
+  .card .maker { font-family: var(--mono); font-size: .74rem; color: var(--faint); margin-bottom: 14px; }
+  .card-meta {
+    display: grid; grid-template-columns: auto 1fr; gap: 5px 12px;
+    font-size: .8rem; margin-bottom: 14px;
+    padding-bottom: 14px; border-bottom: 1px dashed var(--line-strong);
+  }
+  .card-meta dt { font-family: var(--mono); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); padding-top: 1px; }
+  .card-meta dd { margin: 0; color: var(--ink); }
+  .card-meta dd .mono { font-size: .82rem; }
+  .card p.blurb { margin: 0 0 14px; font-size: .9rem; color: var(--muted); }
+  .sw { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+  .sw-row { display: flex; gap: 9px; font-size: .84rem; align-items: flex-start; }
+  .sw-row .ic {
+    font-family: var(--mono); font-weight: 700; flex: none; margin-top: 1px;
+    width: 16px; text-align: center;
+  }
+  .sw-row.plus .ic { color: var(--good); }
+  .sw-row.minus .ic { color: var(--fam-rag); }
+  .sw-row span.txt { color: var(--muted); }
+
+  /* ---------- decision guide ---------- */
+  .guide { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  .g-card {
+    border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+    padding: 18px 18px 16px;
+  }
+  .g-card .scen {
+    font-size: .95rem; font-weight: 640; margin: 0 0 12px; line-height: 1.4;
+    display: flex; gap: 9px; align-items: baseline;
+  }
+  .g-card .scen .q { font-family: var(--mono); color: var(--accent); font-weight: 700; flex: none; }
+  .g-pick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .pill {
+    font-family: var(--mono); font-size: .74rem; font-weight: 600;
+    padding: 3px 9px; border-radius: 6px;
+    background: var(--fam, var(--accent-soft)); color: #fff;
+  }
+  .pill.ghost { background: transparent; border: 1px solid var(--line-strong); color: var(--muted); font-weight: 500; }
+  .g-card .why { font-size: .84rem; color: var(--muted); margin: 0; }
+
+  /* ---------- trends ---------- */
+  .trends { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .trend {
+    border: 1px solid var(--line); border-radius: 12px; padding: 18px;
+    background: var(--surface-2);
+  }
+  .trend .t-num { font-family: var(--mono); font-size: .72rem; color: var(--accent); letter-spacing: .1em; }
+  .trend h4 { margin: 8px 0 8px; font-size: 1.02rem; font-weight: 680; letter-spacing: -.01em; }
+  .trend p { margin: 0; font-size: .87rem; color: var(--muted); }
+
+  /* ---------- footer ---------- */
+  footer { padding: 40px 0 64px; }
+  footer .note {
+    font-size: .8rem; color: var(--faint); max-width: 74ch; line-height: 1.6;
+  }
+  footer .disclaim {
+    margin-top: 16px; padding: 14px 16px; border: 1px dashed var(--line-strong);
+    border-radius: 9px; font-size: .78rem; color: var(--muted);
+  }
+
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 20;
+    font-family: var(--mono); font-size: .72rem; letter-spacing: .05em;
+    background: var(--surface); color: var(--muted);
+    border: 1px solid var(--line-strong); border-radius: 999px;
+    padding: 7px 13px; cursor: pointer;
+  }
+  .theme-toggle:hover { color: var(--ink); border-color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  @media (max-width: 640px) {
+    .top-inner { padding: 40px 20px 32px; }
+    section { padding: 40px 0; }
+    .wrap { padding: 0 18px; }
+  }
+</style>
+
+<button class="theme-toggle" id="themeToggle" aria-label="테마 전환">◐ THEME</button>
+
+<header class="top">
+  <div class="top-inner wrap">
+    <div class="kicker-row">
+      <span class="eyebrow">AI Agent Framework Landscape</span>
+      <span class="eyebrow" style="color:var(--accent)">Research Brief</span>
+    </div>
+    <h1 class="title">현대 에이전트 SDK <span class="thin">전면 비교</span></h1>
+    <p class="lede">LangGraph부터 각 모델 제공사의 Agent SDK까지 — 2026년 중반 기준으로 주요 13개 에이전트 프레임워크를 아키텍처·모델 유연성·멀티에이전트·라이선스 관점에서 정리하고 비교합니다.</p>
+    <div class="meta-strip">
+      <span class="chip"><b>13</b> 프레임워크</span>
+      <span class="chip"><b>6</b> 가족(family)</span>
+      <span class="chip">기준일 <b>2026-07</b></span>
+      <span class="chip">MCP · A2A 지원 현황 포함</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ============ LEGEND ============ -->
+<section id="legend">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">분류 체계</span>
+      <h2>6개 "가족"으로 나눠 본 지형도</h2>
+      <p>프레임워크마다 세계관이 다릅니다. 아래 색상은 이 문서 전체에서 각 프레임워크가 속한 가족을 나타냅니다.</p>
+    </div>
+    <div class="legend">
+      <div class="legend-item" style="--fam:var(--fam-provider)">
+        <span class="dot"></span>
+        <div><div class="lg-name">모델 제공사 SDK</div><div class="lg-desc">OpenAI Agents · Claude Agent — 모델 벤더가 직접 만든 공식 하네스</div></div>
+      </div>
+      <div class="legend-item" style="--fam:var(--fam-graph)">
+        <span class="dot"></span>
+        <div><div class="lg-name">그래프·오케스트레이션</div><div class="lg-desc">LangGraph · Google ADK · MS Agent Framework — 명시적 상태·그래프 제어</div></div>
+      </div>
+      <div class="legend-item" style="--fam:var(--fam-role)">
+        <span class="dot"></span>
+        <div><div class="lg-name">역할·대화형 멀티에이전트</div><div class="lg-desc">CrewAI · AG2 — 역할/작업 기반 "AI 팀" 협업 모델</div></div>
+      </div>
+      <div class="legend-item" style="--fam:var(--fam-rag)">
+        <span class="dot"></span>
+        <div><div class="lg-name">데이터·RAG 중심</div><div class="lg-desc">LlamaIndex — 문서·검색 기반 에이전트의 명가</div></div>
+      </div>
+      <div class="legend-item" style="--fam:var(--fam-python)">
+        <span class="dot"></span>
+        <div><div class="lg-name">타입세이프·경량 (Python)</div><div class="lg-desc">Pydantic AI · smolagents — 신뢰성/최소주의 지향</div></div>
+      </div>
+      <div class="legend-item" style="--fam:var(--fam-cloud)">
+        <span class="dot"></span>
+        <div><div class="lg-name">TS·웹 &amp; 클라우드</div><div class="lg-desc">Mastra · Vercel AI SDK · Strands(AWS) — 풀스택/프로덕션 배포</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MASTER MATRIX ============ -->
+<section id="matrix">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">한눈에 보기</span>
+      <h2>마스터 비교 매트릭스</h2>
+      <p>13개 프레임워크의 핵심 스펙을 한 표에 정리했습니다. 가로로 스크롤됩니다.</p>
+    </div>
+    <div class="table-scroll">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>프레임워크</th>
+            <th>언어</th>
+            <th>버전 (2026 중반)</th>
+            <th>유지관리</th>
+            <th>모델</th>
+            <th>라이선스</th>
+            <th>핵심 강점</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="fw-name"><span class="dot" style="background:var(--fam-graph)"></span>LangGraph</span></td>
+            <td class="tag-lang">Python · JS/TS</td>
+            <td class="ver tnum">1.0 GA · 1.2.x</td>
+            <td>LangChain Inc.</td>
+            <td class="tag-lang">모든 모델</td>
+            <td class="lic mit">MIT</td>
+            <td class="td-strength">지속성·체크포인트·HITL, 프로덕션 검증 1위</td>
+          </tr>
+          <tr>
+            <td><span class="fw-name"><span class="dot" style="background:var(--fam-provider)"></span>OpenAI Agents SDK</span></td>
+            <td class="tag-lang">Python · JS/TS</td>
+            <td class="ver tnum">0.18.3</td>
+            <td>OpenAI</td>
+            <td class="tag-lang">100+ (LiteLLM)</td>
+            <td class="lic mit">MIT</td>
+            <td class="td-strength">경량 handoff, 내장 트레이싱·가드레일, 음성/실시간</td>
+          </tr>
+          <tr>
+            <td><span class="fw-name"><span class="dot" style="background:var(--fam-provider)"></span>Claude Agent SDK</span></td>
+            <td class="tag-lang">Python · TS</td>
+            <td class="ver tnum">0.2.x</td>
+            <td>Anthropic</td>
+            <td class="tag-lang">Claude 전용</td>
+            <td class="lic comm">Commercial</td>
+            <td class="td-strength">자율 코딩·OS 조작, 서브에이전트, 네이티브 MCP</td>
+          </tr>
+          <tr>
+            <td><span class="fw-name"><span class="dot" style="background:var(--fam-graph)"></span>Google ADK</span></td>
+            <td class="tag-lang">Python · Java +</td>
+            <td class="ver tnum">2.5.0</td>
+            <td>Google</td>
+            <td class="tag-lang">Gemini + 다수</td>
+            <td class="lic apache">Apache 2.0</td>
+            <td class="td-strength">결정론적 그래프 워크플로우, 네이티브 A2A+MCP, Vertex</td>
+          </tr>
+          <tr>
+            <td><span class="fw-name"><span class="dot" style="background:var(--fam-role)"></span>CrewAI</span></td>
+            <td class="tag-lang">Python</td>
+            <td class="ver tnum">1.14.3</td>
+            <td>CrewAI Inc.</td>
+            <td class="tag-lang">다수 (LiteLLM)</td>
+            <td class="lic mit">MIT</td>
+            <td class="td-strength">역할/작업 기반 빠른 셋업, Crews + Flows</td>
+          </tr>
+          <tr>
+            <td><span class="fw-name"><span class="dot" style="background:var(--fam-graph)"></span>MS Agent Framework</span></td>
+            <td class="tag-lang">.NET · Python</td>
+            <td class="ver tnum">1.0 GA</td>
+            <td>Microsoft</td>
+            <td class="tag-lang">다수</td>
+            <td class="lic apache">Open src</td>
+            <td class="td-strength">AutoGen+SK 통합, .NET 최강, MCP+A2A, 엔터프라이즈</td>
+          </tr>
+          <tr>
+            <td><span class="fw-name"><span class="dot" style="background:var(--fam-role)"></span>AG2 (구 AutoGen)</span></td>
+            <td class="tag-lang">Python</td>
+            <td class="ver tnum">1.0.0b0</td>
+            <td>커뮤니티 포크</td>
+            <td class="tag-lang">다수</td>
+            <td class="lic apache">Apache 2.0</td>
+            <td class="td-strength">클래식 대화형 멀티에이전트 모델의 계승</td>
+          </tr>
+          <tr>
+            <td><span class="fw-name"><span class="dot" style="background:var(--fam-python)"></span>Pydantic AI</span></td>
+            <td class="tag-lang">Python</td>
+            <td class="ver tnum">2.6.0</td>
+            <td>Pydantic</td>
+            <td class="tag-lang">다수</td>
+            <td class="lic mit">MIT</td>
+            <td class="td-strength">타입세이프·구조화 출력·신뢰성, Logfire 관측</td>
+          </tr>
+          <tr>
+            <td><span class="fw-name"><span class="dot" style="background:var(--fam-rag)"></span>LlamaIndex Workflows</span></td>
+            <td class="tag-lang">Python · TS</td>
+            <td class="ver tnum">Workflows 1.0</td>
+            <td>LlamaIndex Inc.</td>
+            <td class="tag-lang">다수</td>
+            <td class="lic mit">MIT</td>
+            <td class="td-strength">RAG·문서 중심 최강, 이벤트 기반 스텝 오케스트레이션</td>
+          </tr>
+          <tr>
+            <td><span class="fw-name"><span class="dot" style="background:var(--fam-cloud)"></span>Mastra</span></td>
+            <td class="tag-lang">TypeScript</td>
+            <td class="ver tnum">2026 활발</td>
+            <td>Mastra</td>
+            <td class="tag-lang">다수</td>
+            <td class="lic apache">Apache 2.0*</td>
+            <td class="td-strength">TS 네이티브, 메모리+내구성 워크플로우+플레이그라운드</td>
+          </tr>
+          <tr>
+            <td><span class="fw-name"><span class="dot" style="background:var(--fam-cloud)"></span>Strands Agents</span></td>
+            <td class="tag-lang">Python · TS</td>
+            <td class="ver tnum">1.0</td>
+            <td>AWS</td>
+            <td class="tag-lang">Bedrock + 다수</td>
+            <td class="lic apache">Apache 2.0</td>
+            <td class="td-strength">모델 주도형, MCP 우선, AWS 프로덕션 검증</td>
+          </tr>
+          <tr>
+            <td><span class="fw-name"><span class="dot" style="background:var(--fam-python)"></span>smolagents</span></td>
+            <td class="tag-lang">Python</td>
+            <td class="ver tnum">1.26.0</td>
+            <td>Hugging Face</td>
+            <td class="tag-lang">모든 모델</td>
+            <td class="lic apache">Apache 2.0</td>
+            <td class="td-strength">~1,000줄 초경량, 코드 실행 에이전트, 투명성</td>
+          </tr>
+          <tr>
+            <td><span class="fw-name"><span class="dot" style="background:var(--fam-cloud)"></span>Vercel AI SDK</span></td>
+            <td class="tag-lang">TS/JS</td>
+            <td class="ver tnum">v5 → v6</td>
+            <td>Vercel</td>
+            <td class="tag-lang">다수</td>
+            <td class="lic apache">Apache 2.0</td>
+            <td class="td-strength">스트리밍 UI·프론트 통합 최강, Next.js 시너지</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DETAIL CARDS ============ -->
+<section id="detail">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">상세 프로파일</span>
+      <h2>가족별 심층 카드</h2>
+      <p>각 프레임워크의 아키텍처, 강점(<span style="color:var(--good);font-weight:600">＋</span>)과 약점(<span style="color:var(--fam-rag);font-weight:600">－</span>)을 정리했습니다.</p>
+    </div>
+
+    <!-- family: provider -->
+    <div class="fam-group" style="--fam:var(--fam-provider)">
+      <div class="fam-banner"><span class="fam-badge">모델 제공사 SDK</span><span class="fam-tag">벤더가 직접 만든 공식 하네스 · 서로 정반대의 철학</span></div>
+      <div class="cards">
+        <article class="card" style="--fam:var(--fam-provider)">
+          <h3>OpenAI Agents SDK</h3>
+          <div class="maker">OpenAI · Swarm(2024) 계보</div>
+          <dl class="card-meta">
+            <dt>모델</dt><dd>OpenAI + LiteLLM로 <b>100+ 프로바이더</b> (락인 없음)</dd>
+            <dt>멀티</dt><dd>Handoff(라우팅) / agents-as-tools</dd>
+            <dt>특징</dt><dd>Sessions · Guardrails(tripwire) · 내장 트레이싱 · 음성/Realtime</dd>
+          </dl>
+          <p class="blurb">"여러 가벼운 에이전트를 오케스트레이션한다"는 철학. Agents·Handoffs·Tools·Guardrails 4개 프리미티브로 최소한의 추상화. 단, 비주얼 도구 AgentKit(Agent Builder)은 2026-11 종료 예정.</p>
+          <div class="sw">
+            <div class="sw-row plus"><span class="ic">＋</span><span class="txt">최소 추상화 + 내장 트레이싱/가드레일, 프로바이더 이식성</span></div>
+            <div class="sw-row plus"><span class="ic">＋</span><span class="txt">음성·실시간 에이전트 지원이 업계 최강</span></div>
+            <div class="sw-row minus"><span class="ic">－</span><span class="txt">파일시스템/장기 자율 작업은 Claude SDK보다 약함</span></div>
+          </div>
+        </article>
+        <article class="card" style="--fam:var(--fam-provider)">
+          <h3>Claude Agent SDK</h3>
+          <div class="maker">Anthropic · 구 Claude Code SDK (2025-09 개명)</div>
+          <dl class="card-meta">
+            <dt>모델</dt><dd><b>Claude 전용</b> (API/Bedrock/Vertex/Foundry 인증)</dd>
+            <dt>멀티</dt><dd>서브에이전트(격리 컨텍스트) / Dynamic Workflows</dd>
+            <dt>특징</dt><dd>내장 툴(Bash·Edit·Grep…) · Hooks · Permissions · 네이티브 MCP</dd>
+          </dl>
+          <p class="blurb">"한 에이전트에게 컴퓨터를 통째로 준다"는 정반대 철학. Claude Code의 에이전트 루프·컨텍스트 관리를 그대로 코드에서 호출. 2026-06 Dynamic Workflows로 수백 개 서브에이전트 병렬 확장.</p>
+          <div class="sw">
+            <div class="sw-row plus"><span class="ic">＋</span><span class="txt">자율 코딩·문서·SRE 등 환경 조작형 작업 최강, 설정 제로</span></div>
+            <div class="sw-row plus"><span class="ic">＋</span><span class="txt">네이티브 MCP + 컨텍스트 관리 + 서브에이전트 격리</span></div>
+            <div class="sw-row minus"><span class="ic">－</span><span class="txt">Claude 모델 락인, 토큰 비용 높음, 음성 스토리 약함</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <!-- family: graph -->
+    <div class="fam-group" style="--fam:var(--fam-graph)">
+      <div class="fam-banner"><span class="fam-badge">그래프·오케스트레이션</span><span class="fam-tag">명시적 상태·그래프로 제어권을 개발자에게</span></div>
+      <div class="cards">
+        <article class="card" style="--fam:var(--fam-graph)">
+          <h3>LangGraph</h3>
+          <div class="maker">LangChain Inc. · ~126K★</div>
+          <dl class="card-meta">
+            <dt>모델</dt><dd>StateGraph — 노드/엣지 + 조건부 분기·루프</dd>
+            <dt>지속성</dt><dd>노드마다 체크포인트 → 크래시 복구·타임트래블</dd>
+            <dt>멀티</dt><dd>supervisor / swarm 라이브러리 · Send 병렬</dd>
+          </dl>
+          <p class="blurb">가장 낮은 수준의 명시적 제어. 2025-10 LangChain과 함께 1.0 GA. Klarna·Uber·LinkedIn 등 프로덕션 검증이 가장 많음. LangSmith(관측)·LangGraph Platform(배포)은 유료 레이어.</p>
+          <div class="sw">
+            <div class="sw-row plus"><span class="ic">＋</span><span class="txt">지속성·상태·HITL·리플레이 최강, 복잡한 제어 흐름에 최적</span></div>
+            <div class="sw-row minus"><span class="ic">－</span><span class="txt">장황함(CrewAI 20줄 = LangGraph 50줄+), API 잦은 변경</span></div>
+          </div>
+        </article>
+        <article class="card" style="--fam:var(--fam-graph)">
+          <h3>Google ADK</h3>
+          <div class="maker">Google · Cloud Next 2025 공개</div>
+          <dl class="card-meta">
+            <dt>모델</dt><dd>Agent + Workflow(DAG) · Task API 위임</dd>
+            <dt>표준</dt><dd>네이티브 <b>A2A</b>(Agent Card) + MCP</dd>
+            <dt>배포</dt><dd>Vertex AI Agent Engine 원클릭 · Cloud Run</dd>
+          </dl>
+          <p class="blurb">2.0(2026-03)에서 대화형 → 결정론적 그래프 워크플로우로 전환. 5개 언어(Py·Java·TS·Go·Kotlin) 지향. "에이전트 개발을 소프트웨어 개발처럼."</p>
+          <div class="sw">
+            <div class="sw-row plus"><span class="ic">＋</span><span class="txt">결정론적 워크플로우 + 네이티브 A2A/MCP + 멀티언어·모델</span></div>
+            <div class="sw-row minus"><span class="ic">－</span><span class="txt">Google Cloud/Vertex 중력, 잦은 API 변경(1.0→2.5, 14개월)</span></div>
+          </div>
+        </article>
+        <article class="card" style="--fam:var(--fam-graph)">
+          <h3>Microsoft Agent Framework</h3>
+          <div class="maker">Microsoft · 2026-04 1.0 GA</div>
+          <dl class="card-meta">
+            <dt>통합</dt><dd><b>AutoGen + Semantic Kernel</b> 수렴 (둘 다 유지보수 모드)</dd>
+            <dt>모델</dt><dd>Foundry·Azure·OpenAI·Claude·Bedrock·Gemini·Ollama</dd>
+            <dt>표준</dt><dd>MCP + A2A + AG-UI · YAML 선언형</dd>
+          </dl>
+          <p class="blurb">.NET과 Python 동시 지원 — 에이전트 프레임워크 중 .NET 스토리가 가장 강력. sequential·concurrent·handoff·group chat·Magentic-One 패턴 내장.</p>
+          <div class="sw">
+            <div class="sw-row plus"><span class="ic">＋</span><span class="txt">엔터프라이즈급, Azure/Foundry 통합, 개방 표준(MCP/A2A)</span></div>
+            <div class="sw-row minus"><span class="ic">－</span><span class="txt">신생(두 코드베이스 병합 후 정착 중), Azure 편향</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <!-- family: role -->
+    <div class="fam-group" style="--fam:var(--fam-role)">
+      <div class="fam-banner"><span class="fam-badge">역할·대화형 멀티에이전트</span><span class="fam-tag">"AI 팀" 메타포로 협업을 표현</span></div>
+      <div class="cards">
+        <article class="card" style="--fam:var(--fam-role)">
+          <h3>CrewAI</h3>
+          <div class="maker">CrewAI Inc. · ~54K★ · LangChain 독립</div>
+          <dl class="card-meta">
+            <dt>모델</dt><dd><b>Crews</b>(역할/목표/작업) + <b>Flows</b>(이벤트 기반 결정론)</dd>
+            <dt>메모리</dt><dd>단기·장기·엔티티 메모리</dd>
+            <dt>상용</dt><dd>AMP Cloud (비주얼 에디터·코파일럿·거버넌스)</dd>
+          </dl>
+          <p class="blurb">역할/목표/백스토리 추상화로 몇 줄만에 크루 가동 — 램프업이 가장 빠름. 순수 자율 크루의 신뢰성 문제는 Flows로 보완. Fortune 500의 ~60%가 사용한다고 주장.</p>
+          <div class="sw">
+            <div class="sw-row plus"><span class="ic">＋</span><span class="txt">역할 기반 멀티에이전트 앱 최단 셋업, 대형 커뮤니티</span></div>
+            <div class="sw-row minus"><span class="ic">－</span><span class="txt">추상화가 블랙박스화되기 쉬움, 엔터프라이즈 실행당 과금 부담</span></div>
+          </div>
+        </article>
+        <article class="card" style="--fam:var(--fam-role)">
+          <h3>AG2 <span style="font-weight:400;font-size:.8rem;color:var(--faint)">(구 AutoGen 포크)</span></h3>
+          <div class="maker">커뮤니티 · 2024-11 포크 · ~4.5K★</div>
+          <dl class="card-meta">
+            <dt>모델</dt><dd>AssistantAgent·UserProxy·GroupChat 대화형</dd>
+            <dt>상태</dt><dd>v1.0.0b0 (2026-07) — 1.0 향해 진행 중</dd>
+            <dt>거버넌스</dt><dd>Apache 2.0 · 오픈 거버넌스 "AgentOS"</dd>
+          </dl>
+          <p class="blurb">MS의 방향이 갈리자 커뮤니티가 AutoGen을 포크. 클래식 대화형 멀티에이전트 모델을 "살아있는 프로젝트"로 계승. 오리지널 <code>microsoft/autogen</code>은 유지보수 모드로 사실상 종료.</p>
+          <div class="sw">
+            <div class="sw-row plus"><span class="ic">＋</span><span class="txt">벤더 중립, AutoGen 프로그래밍 모델을 계속 쓰고 싶다면 정답</span></div>
+            <div class="sw-row minus"><span class="ic">－</span><span class="txt">MS 백킹 상실, 커뮤니티 규모·리소스 제한적</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <!-- family: rag -->
+    <div class="fam-group" style="--fam:var(--fam-rag)">
+      <div class="fam-banner"><span class="fam-badge">데이터·RAG 중심</span><span class="fam-tag">문서·검색 파이프라인의 명가</span></div>
+      <div class="cards">
+        <article class="card" style="--fam:var(--fam-rag)">
+          <h3>LlamaIndex Workflows</h3>
+          <div class="maker">LlamaIndex Inc. · 구 GPT Index</div>
+          <dl class="card-meta">
+            <dt>모델</dt><dd><code>@step</code> 이벤트 기반 · <b>AgentWorkflow</b> 사전 구성</dd>
+            <dt>강점</dt><dd>LlamaHub 커넥터 · 인덱싱 · 쿼리/검색 엔진</dd>
+            <dt>배포</dt><dd>llama-deploy로 워크플로우를 서비스화</dd>
+          </dl>
+          <p class="blurb">"RAG 프레임워크"에서 데이터+멀티에이전트 오케스트레이션으로 리브랜딩. Python·TS 이중 지원. 문서 중심 에이전트라면 사실상 표준.</p>
+          <div class="sw">
+            <div class="sw-row plus"><span class="ic">＋</span><span class="txt">RAG·문서 중심 최강, 세밀한 오케스트레이션 제어</span></div>
+            <div class="sw-row minus"><span class="ic">－</span><span class="txt">패키지 난립·표면적 큼, 단순 에이전트엔 과함</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <!-- family: python -->
+    <div class="fam-group" style="--fam:var(--fam-python)">
+      <div class="fam-banner"><span class="fam-badge">타입세이프·경량 (Python)</span><span class="fam-tag">신뢰성과 최소주의</span></div>
+      <div class="cards">
+        <article class="card" style="--fam:var(--fam-python)">
+          <h3>Pydantic AI</h3>
+          <div class="maker">Pydantic 팀 · ~16.5K★</div>
+          <dl class="card-meta">
+            <dt>모델</dt><dd>Agent + <b>capability</b>(툴·훅·설정 합성 단위, v2.0)</dd>
+            <dt>강점</dt><dd>Pydantic 검증·구조화 출력·의존성 주입 · 내구성 에이전트</dd>
+            <dt>관측</dt><dd>Logfire/OpenTelemetry 네이티브 · GEval</dd>
+          </dl>
+          <p class="blurb">2026-06 v2.0 안정화. 타입세이프가 핵심 셀링포인트 — FastAPI/Pydantic 사용자에게 자연스러움. 검증된 구조화 출력이 필요한 프로덕션 앱에 강력.</p>
+          <div class="sw">
+            <div class="sw-row plus"><span class="ic">＋</span><span class="txt">신뢰성·타입세이프·구조화 출력·프로덕션 관측</span></div>
+            <div class="sw-row minus"><span class="ic">－</span><span class="txt">Python 전용, 2.x 빠른 릴리스로 API 변동, 멀티에이전트는 덜 성숙</span></div>
+          </div>
+        </article>
+        <article class="card" style="--fam:var(--fam-python)">
+          <h3>smolagents</h3>
+          <div class="maker">Hugging Face · ~1,000줄</div>
+          <dl class="card-meta">
+            <dt>모델</dt><dd><b>CodeAgent</b> — 액션을 실행 가능한 Python 코드로 표현</dd>
+            <dt>실행</dt><dd>E2B·Modal·Docker 샌드박스</dd>
+            <dt>모델</dt><dd>transformers·Ollama·Hub·LiteLLM — 완전 자유</dd>
+          </dl>
+          <p class="blurb">JSON 툴콜 대신 코드 스니펫으로 행동 — 표현력 높은 제어 흐름. 라이브러리 전체를 읽을 수 있을 만큼 투명. Hub에서 툴/에이전트 공유. 멀티모달 입력 지원.</p>
+          <div class="sw">
+            <div class="sw-row plus"><span class="ic">＋</span><span class="txt">단순·투명, 모델 자유, Hub 통합, 표현력 있는 코드 에이전트</span></div>
+            <div class="sw-row minus"><span class="ic">－</span><span class="txt">코드 실행 = 샌드박스 필수, 프로덕션 배포·내구성 기능 얇음</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <!-- family: cloud/ts -->
+    <div class="fam-group" style="--fam:var(--fam-cloud)">
+      <div class="fam-banner"><span class="fam-badge">TS·웹 &amp; 클라우드</span><span class="fam-tag">풀스택 개발자 경험 &amp; 프로덕션 배포</span></div>
+      <div class="cards">
+        <article class="card" style="--fam:var(--fam-cloud)">
+          <h3>Mastra</h3>
+          <div class="maker">Mastra (Gatsby 출신) · Replit·SoftBank 사용</div>
+          <dl class="card-meta">
+            <dt>모델</dt><dd>Agents · Graph Workflows(내구성·재개) · Memory · Tools</dd>
+            <dt>타입</dt><dd><b>Zod</b> 스키마로 전면 타입세이프</dd>
+            <dt>DX</dt><dd>로컬 Developer Studio 플레이그라운드</dd>
+          </dl>
+          <p class="blurb">TypeScript 네이티브 종합 프레임워크. 메모리(작업+시맨틱)·내구성 워크플로우·MCP(클라이언트+서버 저작)·평가 내장. JS/TS 팀의 선두 옵션.</p>
+          <div class="sw">
+            <div class="sw-row plus"><span class="ic">＋</span><span class="txt">JS/TS 팀 최강 DX, 메모리+내구성 워크플로우+플레이그라운드</span></div>
+            <div class="sw-row minus"><span class="ic">－</span><span class="txt">TS/JS 한정, 상대적으로 신생, 엔터프라이즈 기능은 비공개</span></div>
+          </div>
+        </article>
+        <article class="card" style="--fam:var(--fam-cloud)">
+          <h3>Strands Agents</h3>
+          <div class="maker">AWS · 2026 Python/TS 1.0 · Amazon Q 내부 사용</div>
+          <dl class="card-meta">
+            <dt>모델</dt><dd><b>모델 주도형</b> — 모델·툴·프롬프트만 주면 루프를 모델이 주도</dd>
+            <dt>멀티</dt><dd>SubAgent · A2A · 원격 세션 매니저</dd>
+            <dt>모델</dt><dd>Bedrock·Claude·Llama·Ollama·LiteLLM</dd>
+          </dl>
+          <p class="blurb">하드코딩된 그래프 대신 모델이 추론/툴 루프를 주도. MCP를 양쪽 언어에서 1급으로 지원. AWS 내부(Amazon Q·Glue)에서 검증. Bedrock AgentCore로 배포.</p>
+          <div class="sw">
+            <div class="sw-row plus"><span class="ic">＋</span><span class="txt">프로덕션 검증, MCP·모델 유연성 우수, Python+TS 이중</span></div>
+            <div class="sw-row minus"><span class="ic">－</span><span class="txt">AWS/Bedrock 중력, 커뮤니티 통합은 아직 신생</span></div>
+          </div>
+        </article>
+        <article class="card" style="--fam:var(--fam-cloud)">
+          <h3>Vercel AI SDK</h3>
+          <div class="maker">Vercel · ~11.5M weekly npm · ~23.7K★</div>
+          <dl class="card-meta">
+            <dt>모델</dt><dd>generateText/streamText/Object + <b>Agent</b> 클래스 루프</dd>
+            <dt>UI</dt><dd><code>useChat</code> · AI Elements 프리빌트 컴포넌트</dd>
+            <dt>2026</dt><dd>Workflows(내구성)·Sandbox·SSE 스트리밍</dd>
+          </dl>
+          <p class="blurb">웹 프론트엔드 스트리밍·UI 통합이 업계 최강. 모델 SDK가 먼저, 에이전트 프레임워크가 나중 — v5/v6로 에이전트 루프 확장 중. Next.js/Vercel 시너지 압도적.</p>
+          <div class="sw">
+            <div class="sw-row plus"><span class="ic">＋</span><span class="txt">UI/스트리밍 DX 최강, 프로바이더 중립, 대규모 채택</span></div>
+            <div class="sw-row minus"><span class="ic">－</span><span class="txt">v5→v6 잦은 파괴적 변경, 무거운 멀티에이전트·메모리는 약함</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ DECISION GUIDE ============ -->
+<section id="guide">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">의사결정 가이드</span>
+      <h2>"그래서 뭘 써야 해?" — 상황별 추천</h2>
+      <p>정답은 없습니다. 작업의 성격·팀 언어·배포 환경·모델 종속 허용치에 따라 갈립니다.</p>
+    </div>
+    <div class="guide">
+      <div class="g-card">
+        <p class="scen"><span class="q">Q.</span> 복잡한 상태·장기 실행·사람 승인(HITL)이 핵심인 프로덕션 에이전트</p>
+        <div class="g-pick"><span class="pill" style="--fam:var(--fam-graph)">LangGraph</span><span class="pill ghost">MS Agent Framework</span></div>
+        <p class="why">체크포인트·지속성·타임트래블·인터럽트가 1급 시민. 장황함은 감수.</p>
+      </div>
+      <div class="g-card">
+        <p class="scen"><span class="q">Q.</span> 코드를 짜고 파일·쉘을 조작하는 자율 코딩/SRE/문서 에이전트</p>
+        <div class="g-pick"><span class="pill" style="--fam:var(--fam-provider)">Claude Agent SDK</span></div>
+        <p class="why">내장 툴·컨텍스트 관리·서브에이전트가 즉시. Claude 락인과 비용은 감수.</p>
+      </div>
+      <div class="g-card">
+        <p class="scen"><span class="q">Q.</span> 여러 모델을 자유롭게 갈아끼우며 가볍게 라우팅·음성 에이전트</p>
+        <div class="g-pick"><span class="pill" style="--fam:var(--fam-provider)">OpenAI Agents SDK</span></div>
+        <p class="why">최소 추상화 + 내장 트레이싱, LiteLLM로 100+ 모델, 실시간/음성 최강.</p>
+      </div>
+      <div class="g-card">
+        <p class="scen"><span class="q">Q.</span> 몇 줄로 "역할 나눈 AI 팀"을 빠르게 프로토타이핑</p>
+        <div class="g-pick"><span class="pill" style="--fam:var(--fam-role)">CrewAI</span></div>
+        <p class="why">역할/목표/작업 추상화로 램프업 최단. 결정론 필요하면 Flows 병용.</p>
+      </div>
+      <div class="g-card">
+        <p class="scen"><span class="q">Q.</span> 문서·검색(RAG)이 중심인 에이전트</p>
+        <div class="g-pick"><span class="pill" style="--fam:var(--fam-rag)">LlamaIndex</span></div>
+        <p class="why">LlamaHub 커넥터·인덱싱·쿼리 엔진의 데이터 혈통이 압도적.</p>
+      </div>
+      <div class="g-card">
+        <p class="scen"><span class="q">Q.</span> 타입세이프·검증된 구조화 출력·신뢰성이 최우선(Python)</p>
+        <div class="g-pick"><span class="pill" style="--fam:var(--fam-python)">Pydantic AI</span></div>
+        <p class="why">Pydantic 검증 전면 + Logfire 관측. FastAPI 스택과 궁합.</p>
+      </div>
+      <div class="g-card">
+        <p class="scen"><span class="q">Q.</span> Next.js/React 웹앱에 스트리밍 챗·에이전트 UI 임베드</p>
+        <div class="g-pick"><span class="pill" style="--fam:var(--fam-cloud)">Vercel AI SDK</span><span class="pill ghost">Mastra</span></div>
+        <p class="why">UI/스트리밍 DX 최강. 더 무거운 오케스트레이션·메모리는 Mastra.</p>
+      </div>
+      <div class="g-card">
+        <p class="scen"><span class="q">Q.</span> AWS 위에서 MCP 우선 프로덕션 멀티에이전트</p>
+        <div class="g-pick"><span class="pill" style="--fam:var(--fam-cloud)">Strands</span></div>
+        <p class="why">모델 주도형 + Bedrock AgentCore 배포 + 내부 검증. Python·TS 이중.</p>
+      </div>
+      <div class="g-card">
+        <p class="scen"><span class="q">Q.</span> .NET 샵 / Azure·Foundry 엔터프라이즈</p>
+        <div class="g-pick"><span class="pill" style="--fam:var(--fam-graph)">MS Agent Framework</span></div>
+        <p class="why">에이전트 프레임워크 중 유일하게 .NET 1급. AutoGen+SK 통합체.</p>
+      </div>
+      <div class="g-card">
+        <p class="scen"><span class="q">Q.</span> 연구·학습·해킹 — 라이브러리 내부를 다 읽고 싶다</p>
+        <div class="g-pick"><span class="pill" style="--fam:var(--fam-python)">smolagents</span></div>
+        <p class="why">~1,000줄 초경량 코드 에이전트, 모델 완전 자유, HF Hub 통합.</p>
+      </div>
+      <div class="g-card">
+        <p class="scen"><span class="q">Q.</span> 조직·플랫폼을 넘나드는 에이전트 간 협업(상호운용)</p>
+        <div class="g-pick"><span class="pill" style="--fam:var(--fam-graph)">Google ADK</span><span class="pill ghost">A2A 지원 계열</span></div>
+        <p class="why">A2A(Agent Card) 네이티브 + 결정론적 워크플로우. Vertex 배포.</p>
+      </div>
+      <div class="g-card">
+        <p class="scen"><span class="q">Q.</span> 클래식 AutoGen 대화형 모델을 계속 쓰고 싶다</p>
+        <div class="g-pick"><span class="pill" style="--fam:var(--fam-role)">AG2</span></div>
+        <p class="why">오리지널 AutoGen은 유지보수 모드. 살아있는 계승은 커뮤니티 포크 AG2.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRENDS ============ -->
+<section id="trends">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">횡단 관찰</span>
+      <h2>2025→2026, 지형을 바꾼 흐름</h2>
+      <p>개별 프레임워크를 넘어 시장 전체에서 반복되는 패턴입니다.</p>
+    </div>
+    <div class="trends">
+      <div class="trend">
+        <span class="t-num">01</span>
+        <h4>MCP가 사실상 표준</h4>
+        <p>Anthropic이 만든 MCP를 이제 거의 모든 프레임워크가 툴 연동 표준으로 채택. "어느 SDK를 쓰든 MCP 서버는 재사용 가능"이 현실이 됨.</p>
+      </div>
+      <div class="trend">
+        <span class="t-num">02</span>
+        <h4>A2A로 에이전트 상호운용</h4>
+        <p>Google의 A2A(Agent2Agent) 프로토콜을 ADK·MS Agent Framework·Strands가 채택. 조직·런타임을 넘는 에이전트 협업이 개방 표준으로.</p>
+      </div>
+      <div class="trend">
+        <span class="t-num">03</span>
+        <h4>Microsoft의 대통합</h4>
+        <p>AutoGen + Semantic Kernel → <b>Microsoft Agent Framework 1.0</b>(2026-04)으로 수렴. 두 전신은 유지보수 모드. 클래식 AutoGen은 커뮤니티 포크 AG2로 존속.</p>
+      </div>
+      <div class="trend">
+        <span class="t-num">04</span>
+        <h4>"결정론적 그래프"로의 회귀</h4>
+        <p>순수 자율 LLM 루프의 신뢰성 한계를 겪은 뒤, LangGraph·ADK 2.0·CrewAI Flows·Mastra 모두 명시적·결정론적 워크플로우를 강화.</p>
+      </div>
+      <div class="trend">
+        <span class="t-num">05</span>
+        <h4>두 철학의 양극화</h4>
+        <p>"많은 경량 에이전트 오케스트레이션"(OpenAI·CrewAI) vs "한 에이전트에게 컴퓨터 주기"(Claude SDK). 작업 성격이 선택을 가름.</p>
+      </div>
+      <div class="trend">
+        <span class="t-num">06</span>
+        <h4>오픈코어 + 유료 운영층</h4>
+        <p>프레임워크 자체는 MIT/Apache로 무료, 관측·배포·거버넌스는 유료 플랫폼(LangSmith·AMP·Vertex·Foundry)으로 수익화하는 패턴 정착.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="note">
+      <span class="mono" style="color:var(--accent)">RESEARCH BRIEF</span> · 2026년 7월 기준 · 웹 리서치 종합.
+      주요 출처: 각 프레임워크 공식 문서·GitHub·PyPI/npm 릴리스 페이지, LangChain/OpenAI/Anthropic/Google/Microsoft/AWS 공식 블로그, 그리고 비교 분석 아티클(particula.tech, composio.dev, visualstudiomagazine 등).
+    </p>
+    <p class="disclaim">
+      ⚠︎ 정확도 참고 — 세부 마이너 버전·릴리스 날짜·채택 통계 일부는 2차 출처(블로그·집계 사이트)에서 확인된 값으로, 근사치로 취급하세요. 아키텍처·계보·라이선스 등 핵심 사실은 공식 문서로 교차 검증했습니다. 에이전트 생태계는 매우 빠르게 변하므로 실제 도입 전 각 공식 릴리스 노트를 재확인하시길 권합니다.
+    </p>
+  </div>
+</footer>
+
+</main>
+
+<script>
+  (function () {
+    var btn = document.getElementById('themeToggle');
+    var root = document.documentElement;
+    btn.addEventListener('click', function () {
+      var cur = root.getAttribute('data-theme');
+      if (!cur) {
+        cur = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      root.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+    });
+  })();
+</script>
