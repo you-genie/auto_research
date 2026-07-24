@@ -179,13 +179,23 @@
 
 ---
 
-## Slide 20: [섹션 구분] L4 — 메모리 & RAG
+## Slide 20: Clarification / Elicitation — 에이전트가 되묻기
+**Visual**: 실행 루프가 멈추고 사용자에게 말풍선 모달(질문 + 자동생성 객관식 옵션)이 뜨는 그림. 옆에 3분법 라벨(Clarification / Approval / Interrupt).
+**Key Points**:
+- AskUserQuestion (Claude Code 네이티브)
+- MCP elicitation · A2A input-required
+- Codex: 자율지향 → 네이티브 부재
+**Speaker Notes**: clarification(정보 부족해 되묻기)은 approval(승인 게이팅)·interrupt(사용자 중단)과 별개. Claude Code는 전용 네이티브 툴(옵션 자동생성 + 모달 렌더 + 루프 블록)로 승격. 프로토콜 레벨엔 MCP elicitation·A2A input-required·Managed Agents requires_action. Codex는 비동기·자율(sandbox-per-task)이라 되묻기가 큐를 막으므로 약하게 두고 가정+명시/커뮤니티 스킬로 대체. 모델 자체도 ask-rate를 프롬프트로 튜닝(Opus 4.8은 자주 묻는 경향).
+
+---
+
+## Slide 21: [섹션 구분] L4 — 메모리 & RAG
 **Visual**: 뇌 + 외장 디스크 아이콘, 사이에 write/read 양방향 화살표.
 **Speaker Notes**: 컨텍스트 밖에 기억을 쓰고 필요할 때 되읽기.
 
 ---
 
-## Slide 21: 메모리 분류 체계
+## Slide 22: 메모리 분류 체계
 **Visual**: 2축 매트릭스 — 세로(단기/장기), 가로(semantic/episodic/procedural), 각 셀 예시 아이콘.
 **Key Points**:
 - 단기(창) vs 장기(밖)
@@ -194,7 +204,7 @@
 
 ---
 
-## Slide 22: 장기 메모리 구현체 비교
+## Slide 23: 장기 메모리 구현체 비교
 **Visual**: 5행 비교 카드(Letta / Anthropic memory tool / Mem0 / Zep / LangMem), 각 행에 핵심 메커니즘+대표 수치.
 **Key Points**:
 - Letta: OS 3계층
@@ -204,7 +214,7 @@
 
 ---
 
-## Slide 23: Agentic RAG
+## Slide 24: Agentic RAG
 **Visual**: 좌(정적 RAG: 일직선) vs 우(agentic: 검색이 루프 속 툴, 재검색·CRAG 폴백 분기).
 **Key Points**:
 - 검색 = 결정하는 툴
@@ -214,13 +224,13 @@
 
 ---
 
-## Slide 24: [섹션 구분] L5 — 플래닝 / 추론 / 자기수정
+## Slide 25: [섹션 구분] L5 — 플래닝 / 추론 / 자기수정
 **Visual**: 분기하는 흐름도(플랜→실행→검증→재계획).
 **Speaker Notes**: 무엇을 다음에 할지 결정하는 제어 흐름.
 
 ---
 
-## Slide 25: 추론 패턴 계보
+## Slide 26: 추론 패턴 계보
 **Visual**: 트리 계보도 — CoT 뿌리에서 ReAct/ToT/Reflexion/ReWOO/LLM Compiler로 가지.
 **Key Points**:
 - ReAct: 인터리브
@@ -230,7 +240,7 @@
 
 ---
 
-## Slide 26: 프로덕션 = 외부화된 가변 계획
+## Slide 27: 프로덕션 = 외부화된 가변 계획
 **Visual**: todo.md/TodoWrite 체크리스트 카드 3개(Claude Code / Manus / Devin), 각 상태 pending/in_progress/done.
 **Key Points**:
 - TodoWrite (3+ 스텝)
@@ -240,7 +250,7 @@
 
 ---
 
-## Slide 27: Anthropic 5 워크플로우 패턴
+## Slide 28: Anthropic 5 워크플로우 패턴
 **Visual**: 5개 미니 다이어그램(chaining/routing/parallelization/orchestrator-workers/evaluator-optimizer).
 **Key Points**:
 - 단일 → 워크플로우 → 에이전트
@@ -249,7 +259,7 @@
 
 ---
 
-## Slide 28: 테스트타임 컴퓨트
+## Slide 29: 테스트타임 컴퓨트
 **Visual**: 두 축(순차=사고 연장 / 병렬=다수 샘플+투표), generator-verifier gap 저울.
 **Key Points**:
 - 순차 vs 병렬 스케일링
@@ -258,13 +268,13 @@
 
 ---
 
-## Slide 29: [섹션 구분] L6 — 멀티에이전트
+## Slide 30: [섹션 구분] L6 — 멀티에이전트
 **Visual**: 오케스트레이터 노드에서 3~5 서브에이전트로 팬아웃하는 방사형.
 **Speaker Notes**: 작업을 쪼개 병렬 서브에이전트로 확장.
 
 ---
 
-## Slide 30: Anthropic 멀티에이전트 리서치
+## Slide 31: Anthropic 멀티에이전트 리서치
 **Visual**: 리드(Opus)→서브(Sonnet)×5 병렬→합성→CitationAgent. 우측 큰 배지 "+90.2%" / "15× 토큰".
 **Key Points**:
 - 단일 대비 +90.2%
@@ -274,7 +284,7 @@
 
 ---
 
-## Slide 31: 프레임워크 지형도
+## Slide 32: 프레임워크 지형도
 **Visual**: 2축 산점도 — X축(그래프/결정적 ↔ 자율/LLM주도), Y축(코드 ↔ 대화). LangGraph/OpenAI SDK/CrewAI/AutoGen/ADK/Claude Agent SDK 배치.
 **Key Points**:
 - 그래프 vs 자율
@@ -283,7 +293,7 @@
 
 ---
 
-## Slide 32: MCP vs A2A vs AGNTCY
+## Slide 33: MCP vs A2A vs AGNTCY
 **Visual**: 수직축(MCP: 에이전트↓툴) + 수평축(A2A: 에이전트↔에이전트) 십자 다이어그램, 위에 AGNTCY(발견/신원/관측) 우산.
 **Key Points**:
 - MCP: 수직
@@ -293,7 +303,7 @@
 
 ---
 
-## Slide 33: "멀티에이전트 만들지 마라" 논쟁
+## Slide 34: "멀티에이전트 만들지 마라" 논쟁
 **Visual**: 좌우 링(Cognition: single writer) vs (Anthropic: 병렬 읽기), 가운데 화해 배너 "읽기=병렬, 쓰기=단일".
 **Key Points**:
 - Cognition: 컨텍스트 공유
@@ -303,13 +313,13 @@
 
 ---
 
-## Slide 34: [섹션 구분] L7 — 평가 / 관측 / 가드레일 / 신뢰성
+## Slide 35: [섹션 구분] L7 — 평가 / 관측 / 가드레일 / 신뢰성
 **Visual**: 방패 + 돋보기 + 게이지 아이콘.
 **Speaker Notes**: 프로덕션 경화. 70% 작동 프로토타입과 프로덕션 사이의 간극.
 
 ---
 
-## Slide 35: 평가 3단계
+## Slide 36: 평가 3단계
 **Visual**: 3층 피라미드(Final Response / Trajectory / Single-Step) + 벤치마크 로고 띠.
 **Key Points**:
 - 결과 / 궤적 / 단계
@@ -318,7 +328,7 @@
 
 ---
 
-## Slide 36: Lethal Trifecta
+## Slide 37: Lethal Trifecta
 **Visual**: 3원 벤다이어그램 교집합(사설 데이터 / 비신뢰 콘텐츠 / 외부 통신) = 위험 폭발 아이콘.
 **Key Points**:
 - 사설 데이터
@@ -328,7 +338,7 @@
 
 ---
 
-## Slide 37: 신뢰성 — checkpoint ≠ durable
+## Slide 38: 신뢰성 — checkpoint ≠ durable
 **Visual**: 좌(프로세스 죽으면 런도 죽음) vs 우(Temporal: 런이 생존, 재시도·재개).
 **Key Points**:
 - Idempotency
@@ -338,13 +348,13 @@
 
 ---
 
-## Slide 38: [섹션 구분] L8 — 상용에서는 뭘 쓰나
+## Slide 39: [섹션 구분] L8 — 상용에서는 뭘 쓰나
 **Visual**: 제품 로고 그리드(Claude Code/Devin/Manus/Codex/Copilot/Cursor/Jules/AgentCore/Replit/Comet).
 **Speaker Notes**: 겉모습은 제각각, 벗겨보면 8개 레이어의 조합.
 
 ---
 
-## Slide 39: 상용 티어다운 표
+## Slide 40: 상용 티어다운 표
 **Visual**: 큰 비교표(제품 / 단일·멀티 / 실행환경 / 핵심 베팅) — 색상 코딩.
 **Key Points**:
 - 샌드박스-per-task 보편
@@ -354,7 +364,7 @@
 
 ---
 
-## Slide 40: 관통하는 7가지 교훈
+## Slide 41: 관통하는 7가지 교훈
 **Visual**: 7개 번호 배지 리스트, 각 아이콘.
 **Key Points**:
 - 컨텍스트 > 프롬프트
@@ -364,7 +374,7 @@
 
 ---
 
-## Slide 41: 전체 조립도
+## Slide 42: 전체 조립도
 **Visual**: 블로그의 ASCII 조립도를 깔끔한 아키텍처 다이어그램으로 재현 — 사용자 목표 → 하네스 루프(gather/act/verify) → 각 레이어 라벨 → 샌드박스 실행 → PR.
 **Key Points**:
 - 8 레이어 = 한 시스템
@@ -373,7 +383,7 @@
 
 ---
 
-## Slide 42: 결론
+## Slide 43: 결론
 **Visual**: 한 문장 대형 타이포 "더 똑똑한 프롬프트가 아니라 더 잘 설계된 시스템", 배경에 흐릿한 스택.
 **Key Points**:
 - 시스템 설계의 승부
@@ -382,7 +392,7 @@
 
 ---
 
-## Slide 43: Q&A / 참고문헌
+## Slide 44: Q&A / 참고문헌
 **Visual**: QR 또는 링크 리스트(Anthropic engineering, Manus blog, Cognition, MCP spec, A2A spec, MAST).
 **Key Points**:
 - Q&A
