@@ -1,5 +1,5 @@
 ---
-layout: post
+layout: default
 title: "요즘 에이전트, 진짜로 뭘로 만들어지나 — '가장 복잡한 에이전트'를 상정한 구성요소 전면 해부 (2026)"
 date: 2026-07-24
 categories: [research, ai-agents]

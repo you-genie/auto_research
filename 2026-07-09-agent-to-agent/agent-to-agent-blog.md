@@ -1,5 +1,5 @@
 ---
-layout: post
+layout: default
 title: "Agent-to-Agent(A2A) 통합 리서치: '그냥 agent를 tool처럼 부르는 것'과 진짜 A2A는 무엇이 다른가"
 date: 2026-07-09
 categories: [research, ai-agents]

@@ -1,5 +1,5 @@
 ---
-layout: post
+layout: default
 title: "누가 대화를 기억하는가: 상용 모델 API와 에이전트 API의 세션·메모리 소유권 전면 비교 (2026)"
 date: 2026-09-15
 categories: [research, ai-agents]
