@@ -1,5 +1,5 @@
 ---
-layout: post
+layout: default
 title: "IntellAgent 완전 정복: 정책 그래프로 대화형 에이전트의 숨은 취약점을 찾아내는 법"
 date: 2026-07-13
 categories: [research, ai-agents]

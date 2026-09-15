@@ -1,5 +1,5 @@
 ---
-layout: post
+layout: default
 title: "LLM 환각(Hallucination) 완전 정복: 완화 기법부터 대기업 프로덕션 방안까지 (2025~2026)"
 date: 2026-06-11
 category: AI Safety & Alignment
