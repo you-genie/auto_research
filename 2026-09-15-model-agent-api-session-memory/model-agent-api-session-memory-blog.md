@@ -101,7 +101,7 @@ sequenceDiagram
 
 이 그림이 함의하는 실무적 결과가 세 가지다.
 
-- **비용은 줄지 않는다.** OpenAI 문서는 `previous_response_id`로 체인을 이으면 *"체인에 속한 모든 이전 입력 토큰이 입력 토큰으로 과금된다"* 고 명시한다. 서버 세션은 네트워크 페이로드를 줄여줄 뿐 컨텍스트 비용을 줄여주지 않는다. 비용을 실제로 줄이는 건 prompt caching과 compaction 쪽이다.
+- **비용은 줄지 않는다.** OpenAI 문서는 `previous_response_id`로 체인을 이으면 *"체인에 속한 모든 이전 입력 토큰이 입력 토큰으로 과금된다"* 고 명시한다. [\[1\]](#ref1){:.cite} 서버 세션은 네트워크 페이로드를 줄여줄 뿐 컨텍스트 비용을 줄여주지 않는다. 비용을 실제로 줄이는 건 prompt caching과 compaction 쪽이다.
 - **컨텍스트 윈도우 한계는 그대로다.** 서버가 보관해준다고 100만 토큰짜리 대화가 마법처럼 들어가지 않는다. 그래서 L1·L2 제품들은 거의 예외 없이 별도의 요약·compaction 레이어를 함께 내놓는다.
 - **데이터는 벤더 쪽에 남는다.** L0에서는 요청이 끝나면 아무것도 남지 않지만, L1 이상에서는 대화가 벤더 인프라에 저장된다. 이 차이가 7·8장의 거버넌스 논의 전부를 만든다.
 
@@ -113,9 +113,9 @@ sequenceDiagram
 
 OpenAI는 상태 축에서 가장 여러 겹을 동시에 유지하는 벤더다.
 
-- **Chat Completions (`/v1/chat/completions`)** — 완전 무상태. 매 요청에 전체 `messages` 배열을 다시 보내야 한다. 사용자가 지적한 그대로다. 마이그레이션 압박은 있지만 계속 지원된다.
-- **Responses API (`/v1/responses`)** — 기본적으로 상태 저장이다. `store` 파라미터가 기본 `true`이고, 응답 객체는 기본 30일 보관된다. 다음 턴에 `previous_response_id`로 이전 응답 ID를 넘기면 서버가 그 ID로 전체 이력을 조회해 새 입력 앞에 붙인다. 앱은 새 질문만 보내지만 모델은 전체를 본다.
-- **Conversations API (`/v1/conversations`)** — 대화를 *자체 식별자를 가진 장기 객체*로 만드는 전용 리소스다. `conversation` ID를 `/v1/responses` 요청에 넘기면 해당 대화에 턴이 누적된다. 대화 객체와 그 안의 아이템은 **응답 객체의 30일 TTL 적용 대상이 아니다.** 즉 Responses 단독 체인보다 수명이 길다.
+- **Chat Completions (`/v1/chat/completions`)** — 완전 무상태. 매 요청에 전체 `messages` 배열을 다시 보내야 한다. 사용자가 지적한 그대로다. [\[2\]](#ref2){:.cite} 마이그레이션 압박은 있지만 계속 지원된다.
+- **Responses API (`/v1/responses`)** — 기본적으로 상태 저장이다. `store` 파라미터가 기본 `true`이고, 응답 객체는 기본 30일 보관된다. 다음 턴에 `previous_response_id`로 이전 응답 ID를 넘기면 서버가 그 ID로 전체 이력을 조회해 새 입력 앞에 붙인다. 앱은 새 질문만 보내지만 모델은 전체를 본다. [\[1\]](#ref1){:.cite}
+- **Conversations API (`/v1/conversations`)** — 대화를 *자체 식별자를 가진 장기 객체*로 만드는 전용 리소스다. `conversation` ID를 `/v1/responses` 요청에 넘기면 해당 대화에 턴이 누적된다. 대화 객체와 그 안의 아이템은 **응답 객체의 30일 TTL 적용 대상이 아니다.** 즉 Responses 단독 체인보다 수명이 길다. [\[1\]](#ref1){:.cite}
 
 정리하면 OpenAI 안에서만 세 가지 소유권 모델이 동시에 제공된다. 신규 프로젝트에서 "세션을 서버가 갖게 하고 싶다"면 Conversations, "이어붙이기만 되면 된다"면 `previous_response_id`, "데이터를 남기기 싫다"면 `store: false` 또는 Chat Completions다.
 
@@ -123,13 +123,13 @@ OpenAI는 상태 축에서 가장 여러 겹을 동시에 유지하는 벤더다
 
 Anthropic의 Messages API(`/v1/messages`)는 상태 저장 옵션 자체가 없다. 매 요청에 전체 `messages`를 보낸다. 그런데 Anthropic은 L1로 올라가는 대신 **독특한 중간 지점**을 만들었다. 저장은 클라이언트가 계속 하되, **컨텍스트 편집은 서버가 하는** 방식이다.
 
-- **Context editing** (베타 헤더 `context-management-2025-06-27`) — `clear_tool_uses_20250919` 전략을 켜면, 대화가 임계치를 넘었을 때 API가 오래된 tool result를 시간순으로 비우고 자리표시 텍스트로 대체한다. 응답의 `context_management.applied_edits`에 몇 개를 지우고 몇 토큰을 회수했는지 돌아온다.
-- **Compaction** (베타 헤더 `compact-2026-01-12`) — `context_management.edits`에 `compact_20260112`를 넣으면, 입력 토큰이 트리거 임계치(기본 150,000, 최소 50,000)에 도달할 때 모델이 이전 대화의 요약을 담은 `compaction` 블록을 생성한다. 이후 요청에서는 그 블록 **이전의 모든 콘텐츠가 드롭**된다. `pause_after_compaction`으로 요약 직후 멈춰 추가 내용을 끼워넣을 수도 있고, `instructions`로 요약 프롬프트를 통째로 교체할 수도 있다.
+- **Context editing** (베타 헤더 `context-management-2025-06-27`) — `clear_tool_uses_20250919` 전략을 켜면, 대화가 임계치를 넘었을 때 API가 오래된 tool result를 시간순으로 비우고 자리표시 텍스트로 대체한다. 응답의 `context_management.applied_edits`에 몇 개를 지우고 몇 토큰을 회수했는지 돌아온다. [\[10\]](#ref10){:.cite}
+- **Compaction** (베타 헤더 `compact-2026-01-12`) — `context_management.edits`에 `compact_20260112`를 넣으면, 입력 토큰이 트리거 임계치(기본 150,000, 최소 50,000)에 도달할 때 모델이 이전 대화의 요약을 담은 `compaction` 블록을 생성한다. 이후 요청에서는 그 블록 **이전의 모든 콘텐츠가 드롭**된다. `pause_after_compaction`으로 요약 직후 멈춰 추가 내용을 끼워넣을 수도 있고, `instructions`로 요약 프롬프트를 통째로 교체할 수도 있다. [\[11\]](#ref11){:.cite}
 
-여기서 결정적인 포인트가 있다. 공식 문서는 **클라이언트가 여전히 전체 메시지 목록을 매 턴 보낸다**고 명시한다. compaction은 대화 이력을 서버에 저장하지 않는다. 앱은 응답 전체(`compaction` 블록 포함)를 로컬 배열에 append하고, 다음 요청에 그 배열을 통째로 보내면, API가 compaction 블록 이전을 알아서 버린다.
+여기서 결정적인 포인트가 있다. 공식 문서는 **클라이언트가 여전히 전체 메시지 목록을 매 턴 보낸다**고 명시한다. compaction은 대화 이력을 서버에 저장하지 않는다. 앱은 응답 전체(`compaction` 블록 포함)를 로컬 배열에 append하고, 다음 요청에 그 배열을 통째로 보내면, API가 compaction 블록 이전을 알아서 버린다. [\[11\]](#ref11){:.cite}
 
 <div class="callout callout-key" markdown="1">
-**Anthropic 모델 API의 포지션** — "클라이언트가 관리하는 목록 + 서버가 수행하는 컨텍스트 최적화". 저장 주체는 클라이언트(L0)에 남기면서 컨텍스트 엔지니어링의 어려운 부분만 서버로 옮긴 절충안이다. ZDR(Zero Data Retention)을 유지하면서도 장기 실행 에이전트를 돌릴 수 있다는 게 실무적 함의다.
+**Anthropic 모델 API의 포지션** — "클라이언트가 관리하는 목록 + 서버가 수행하는 컨텍스트 최적화". 저장 주체는 클라이언트(L0)에 남기면서 컨텍스트 엔지니어링의 어려운 부분만 서버로 옮긴 절충안이다. ZDR(Zero Data Retention)을 유지하면서도 장기 실행 에이전트를 돌릴 수 있다는 게 실무적 함의다. [\[11\]](#ref11){:.cite}[\[12\]](#ref12){:.cite}
 </div>
 
 ### 3.3 Google Gemini — `generateContent`(L0)에서 Interactions API(L1)로 세대 교체
@@ -138,23 +138,23 @@ Gemini도 같은 길을 갔다. 기존 `generateContent`는 "요청 하나, 응�
 
 - `previous_interaction_id`를 넘기면 서버가 이력을 조회해 이어붙인다.
 - `store`는 기본 `true`다. `store: false`로 무상태를 선택할 수 있지만, 그러면 `previous_interaction_id`와 백그라운드 실행을 못 쓴다.
-- 보존 기간은 유료 티어 **55일**(7/14/28일로 조정 가능), 무료 티어 **1일**이다.
+- 보존 기간은 유료 티어 **55일**(7/14/28일로 조정 가능), 무료 티어 **1일**이다. [\[15\]](#ref15){:.cite}
 - 함정 하나: `tools`, `system_instruction`, `generation_config`는 **interaction 스코프**라서 `previous_interaction_id`로 이어져도 승계되지 않는다. 매 턴 다시 명시해야 한다.
-- 캐싱: Gemini 2.5 이후 모델은 implicit caching이 기본 활성이고, 상태 모드(`previous_interaction_id`)와 무상태 모드 양쪽에서 동작한다.
+- 캐싱: Gemini 2.5 이후 모델은 implicit caching이 기본 활성이고, 상태 모드(`previous_interaction_id`)와 무상태 모드 양쪽에서 동작한다. [\[17\]](#ref17){:.cite}
 
-Google 문서는 앞으로 모든 신규 모델·멀티모달 기능·에이전트 기능이 Interactions API에서 출시된다고 못 박았다. 즉 Gemini는 **상태 저장 쪽을 기본값으로 삼은 첫 주요 모델 API**다.
+Google 문서는 앞으로 모든 신규 모델·멀티모달 기능·에이전트 기능이 Interactions API에서 출시된다고 못 박았다. 즉 Gemini는 **상태 저장 쪽을 기본값으로 삼은 첫 주요 모델 API**다. [\[15\]](#ref15){:.cite}[\[46\]](#ref46){:.cite}
 
 ### 3.4 Azure OpenAI — 표면은 OpenAI, 저장 위치는 고객 테넌트
 
-Azure OpenAI의 Responses API는 OpenAI와 같은 파라미터 표면(`previous_response_id`, `store`)을 제공하고 대화 상태는 30일간(또는 삭제할 때까지) 유지된다. 차별점은 **어디에 저장되느냐**다.
+Azure OpenAI의 Responses API는 OpenAI와 같은 파라미터 표면(`previous_response_id`, `store`)을 제공하고 대화 상태는 30일간(또는 삭제할 때까지) 유지된다. [\[36\]](#ref36){:.cite} 차별점은 **어디에 저장되느냐**다.
 
-Responses API를 Foundry에서 쓰면 서비스가 메시지 이력을 저장할 데이터 스토어를 만드는데, 이 데이터는 **고객 Azure 테넌트의 Foundry 리소스 내부, 해당 리소스와 같은 지리적 위치에 저장**되고 기본적으로 AES-256으로 암호화된다. 규제 산업에서 Azure를 고르는 이유가 여기 압축돼 있다. 같은 API 모양, 다른 데이터 경계.
+Responses API를 Foundry에서 쓰면 서비스가 메시지 이력을 저장할 데이터 스토어를 만드는데, 이 데이터는 **고객 Azure 테넌트의 Foundry 리소스 내부, 해당 리소스와 같은 지리적 위치에 저장**되고 기본적으로 AES-256으로 암호화된다. [\[39\]](#ref39){:.cite} 규제 산업에서 Azure를 고르는 이유가 여기 압축돼 있다. 같은 API 모양, 다른 데이터 경계.
 
 참고로 Azure 쪽 Conversations 엔드포인트는 Foundry REST 레퍼런스에 등재돼 있으나 배포·리전 구성에 따라 가용성이 갈린다는 사용자 보고가 있다. 도입 전에 실제 배포에서 확인하는 편이 안전하다.
 
 ### 3.5 AWS Bedrock — Converse는 L0, 세션은 "명시적 별도 API"
 
-Bedrock의 통합 모델 인터페이스인 **Converse API**는 완전 무상태다. 호출자가 `messages` 배열을 직접 관리하고 매 요청에 전체 이력을 다시 보내야 하며, Bedrock은 그 이력을 보관하지 않는다.
+Bedrock의 통합 모델 인터페이스인 **Converse API**는 완전 무상태다. 호출자가 `messages` 배열을 직접 관리하고 매 요청에 전체 이력을 다시 보내야 하며, Bedrock은 그 이력을 보관하지 않는다. [\[34\]](#ref34){:.cite}
 
 AWS의 선택은 상태를 모델 API에 끼워넣는 대신 **별도 API 묶음으로 떼어낸 것**이다. Bedrock **Session Management API**가 그것이다.
 
@@ -164,9 +164,9 @@ AWS의 선택은 상태를 모델 API에 끼워넣는 대신 **별도 API 묶음
 | `CreateInvocation` | 세션 안에 관련된 상호작용들을 묶는 그룹 생성 |
 | `PutInvocationStep` | 각 상호작용의 세밀한 상태 체크포인트(텍스트·이미지) 저장 |
 
-AWS는 이 API를 LangGraph·LlamaIndex 같은 **오픈소스 프레임워크의 상태 저장소**로 쓰라는 용도로 내놨다. 즉 이건 "모델이 알아서 이어붙여주는 세션"이 아니라 **개발자가 명시적으로 쓰고 명시적으로 읽는 체크포인트 스토어**다. 이 구분이 중요하다. L1 중에서도 자동 주입형(OpenAI·Gemini)과 명시적 저장형(AWS)은 프로그래밍 모델이 완전히 다르다.
+AWS는 이 API를 LangGraph·LlamaIndex 같은 **오픈소스 프레임워크의 상태 저장소**로 쓰라는 용도로 내놨다. [\[32\]](#ref32){:.cite}[\[33\]](#ref33){:.cite} 즉 이건 "모델이 알아서 이어붙여주는 세션"이 아니라 **개발자가 명시적으로 쓰고 명시적으로 읽는 체크포인트 스토어**다. 이 구분이 중요하다. L1 중에서도 자동 주입형(OpenAI·Gemini)과 명시적 저장형(AWS)은 프로그래밍 모델이 완전히 다르다.
 
-참고로 구형 **Bedrock Agents**의 `InvokeAgent`는 `sessionId`를 재사용하면 서버가 세션 상태를 유지하는 자동 주입형이다. 같은 AWS 안에서도 경로마다 다르다.
+참고로 구형 **Bedrock Agents**의 `InvokeAgent`는 `sessionId`를 재사용하면 서버가 세션 상태를 유지하는 자동 주입형이다. [\[34\]](#ref34){:.cite} 같은 AWS 안에서도 경로마다 다르다.
 
 ### 3.6 모델 API 종합 비교
 
@@ -192,7 +192,7 @@ AWS는 이 API를 LangGraph·LlamaIndex 같은 **오픈소스 프레임워크의
 
 ### 4.1 Anthropic Claude Managed Agents — L2 + L3를 한 제품으로
 
-2026년 4월 8일 출시된 Anthropic의 호스팅 에이전트 하네스다. **Anthropic이 하네스, 샌드박스, 세션 로그를 자기 인프라에서 돌린다.** 베타 헤더는 `managed-agents-2026-04-01`.
+2026년 4월 8일 출시된 Anthropic의 호스팅 에이전트 하네스다. **Anthropic이 하네스, 샌드박스, 세션 로그를 자기 인프라에서 돌린다.** [\[7\]](#ref7){:.cite} 베타 헤더는 `managed-agents-2026-04-01`.
 
 네 개 개념으로 구성된다.
 
@@ -203,15 +203,15 @@ AWS는 이 API를 LangGraph·LlamaIndex 같은 **오픈소스 프레임워크의
 | Session | environment 안에서 도는 에이전트 인스턴스. **대화 이력을 세션이 보유** |
 | Events | 앱과 에이전트가 주고받는 메시지(유저 턴, 툴 결과, 상태 업데이트) |
 
-핵심 API 흐름은 `POST /v1/sessions`로 세션을 만들고(필수 필드는 `agent`와 `environment_id`), `POST /v1/sessions/{id}/events`로 이벤트를 보내고, SSE로 스트리밍받는 구조다. `initial_events`(최대 50개)를 create 요청에 넣으면 생성과 시작을 한 번에 할 수 있다. **이벤트 이력은 서버에 영속되며 전체 조회가 가능하다.**
+핵심 API 흐름은 `POST /v1/sessions`로 세션을 만들고(필수 필드는 `agent`와 `environment_id`), `POST /v1/sessions/{id}/events`로 이벤트를 보내고, SSE로 스트리밍받는 구조다. `initial_events`(최대 50개)를 create 요청에 넣으면 생성과 시작을 한 번에 할 수 있다. **이벤트 이력은 서버에 영속되며 전체 조회가 가능하다.** [\[8\]](#ref8){:.cite}
 
 세션 제어 파라미터가 꽤 촘촘하다.
 
 - `agent`를 문자열로 주면 최신 버전, `{"type": "agent", "version": N}`으로 주면 버전 고정, `{"type": "agent_with_overrides", ...}`로 주면 이 세션에만 모델·프롬프트·툴을 덮어쓴다. 오버라이드는 병합이 아니라 **전체 치환**이다.
 - `budget.max_list_cost`로 세션당 비용 상한을 건다. 금액은 부동소수점 반올림을 피하려고 **미국 센트 단위 문자열**(`"2500"` = $25.00)로 받는다. 상한에 닿으면 세션이 `budget_reached`로 일시정지된다.
-- `vault_ids`로 MCP OAuth 자격증명 볼트를 연결하면 토큰 갱신을 Anthropic이 대행한다.
+- `vault_ids`로 MCP OAuth 자격증명 볼트를 연결하면 토큰 갱신을 Anthropic이 대행한다. [\[8\]](#ref8){:.cite}
 
-**장기 메모리는 별도 리소스인 memory store**가 담당한다(베타 헤더 `agent-memory-2026-07-22`, 세션 엔드포인트와 헤더를 **섞으면 400 에러**). 워크스페이스 스코프의 텍스트 문서 컬렉션이고, 세션 생성 시 `resources[]`에 붙이면 샌드박스 안 `/mnt/memory/<slug>/` 경로에 디렉터리로 마운트된다. 에이전트는 평소 쓰던 파일 툴로 읽고 쓴다.
+**장기 메모리는 별도 리소스인 memory store**가 담당한다(베타 헤더 `agent-memory-2026-07-22`, 세션 엔드포인트와 헤더를 **섞으면 400 에러**). 워크스페이스 스코프의 텍스트 문서 컬렉션이고, 세션 생성 시 `resources[]`에 붙이면 샌드박스 안 `/mnt/memory/<slug>/` 경로에 디렉터리로 마운트된다. 에이전트는 평소 쓰던 파일 툴로 읽고 쓴다. [\[9\]](#ref9){:.cite}
 
 | 제약 | 값 |
 | :--- | ---: |
@@ -220,19 +220,19 @@ AWS는 이 API를 LangGraph·LlamaIndex 같은 **오픈소스 프레임워크의
 | store당 최대 메모리 수 | 10,000개 |
 | 메모리 버전 보존 | 30일 (라이브 메모리의 최신 버전은 무기한) |
 
-모든 변경은 불변 **memory version**(`memver_...`)을 만들어 감사 추적이 남고, 규제 대응용 `redact` 엔드포인트가 따로 있다. 동시 쓰기 충돌은 `content_sha256` precondition으로 막는다.
+모든 변경은 불변 **memory version**(`memver_...`)을 만들어 감사 추적이 남고, 규제 대응용 `redact` 엔드포인트가 따로 있다. 동시 쓰기 충돌은 `content_sha256` precondition으로 막는다. [\[9\]](#ref9){:.cite}
 
 <div class="callout callout-warn" markdown="1">
-**보안 경고 (공식 문서 명시)** — memory store는 기본 `read_write`로 붙는다. 에이전트가 신뢰할 수 없는 입력(유저 프롬프트, 웹에서 가져온 콘텐츠, 서드파티 툴 출력)을 처리한다면, 프롬프트 인젝션이 성공했을 때 악성 내용이 store에 **기록**될 수 있다. 이후 세션들은 그걸 신뢰된 기억으로 읽는다. 참조용 자료나 에이전트가 수정할 필요 없는 store는 `read_only`로 붙여야 한다.
+**보안 경고 (공식 문서 명시)** — memory store는 기본 `read_write`로 붙는다. 에이전트가 신뢰할 수 없는 입력(유저 프롬프트, 웹에서 가져온 콘텐츠, 서드파티 툴 출력)을 처리한다면, 프롬프트 인젝션이 성공했을 때 악성 내용이 store에 **기록**될 수 있다. 이후 세션들은 그걸 신뢰된 기억으로 읽는다. 참조용 자료나 에이전트가 수정할 필요 없는 store는 `read_only`로 붙여야 한다. [\[9\]](#ref9){:.cite}
 
 이건 L3 장기 메모리 전반에 해당하는 구조적 위험이다. 메모리는 세션 경계를 넘는 쓰기 채널이고, 그래서 인젝션의 지속성(persistence)을 만들어낸다.
 </div>
 
-데이터 거버넌스 측면에서 중요한 단서가 하나 있다. Managed Agents는 설계상 상태 저장이라 대화 이력·샌드박스 상태·산출물을 서버에 보관하며, 그 결과 **Zero Data Retention과 HIPAA BAA 적용 대상이 아니다.** 세션과 업로드 파일은 API로 언제든 삭제할 수 있다.
+데이터 거버넌스 측면에서 중요한 단서가 하나 있다. Managed Agents는 설계상 상태 저장이라 대화 이력·샌드박스 상태·산출물을 서버에 보관하며, 그 결과 **Zero Data Retention과 HIPAA BAA 적용 대상이 아니다.** 세션과 업로드 파일은 API로 언제든 삭제할 수 있다. [\[7\]](#ref7){:.cite}
 
 ### 4.2 Claude Agent SDK — 같은 회사, 정반대의 상태 소유권
 
-Managed Agents와 대조적으로 Claude Agent SDK는 **로컬 우선**이다. 세션은 `~/.claude/projects/` 아래에 프로젝트 절대경로 해시로 나뉜 디렉터리에 `.jsonl`(한 줄 = 한 이벤트, append-only)로 저장된다. ID로 resume하면 같은 세션에 이어 붙고, fork하면 원본 이력을 복사한 **새 세션 ID**가 생겨 두 갈래가 독립적으로 진행된다.
+Managed Agents와 대조적으로 Claude Agent SDK는 **로컬 우선**이다. 세션은 `~/.claude/projects/` 아래에 프로젝트 절대경로 해시로 나뉜 디렉터리에 `.jsonl`(한 줄 = 한 이벤트, append-only)로 저장된다. ID로 resume하면 같은 세션에 이어 붙고, fork하면 원본 이력을 복사한 **새 세션 ID**가 생겨 두 갈래가 독립적으로 진행된다. [\[13\]](#ref13){:.cite}
 
 즉 Anthropic은 같은 에이전트 개념을 두 가지 상태 소유권으로 동시에 판다. **"내 머신/내 서버에 이력을 두겠다"면 Agent SDK, "인프라를 아예 안 만들겠다"면 Managed Agents.**
 
@@ -246,19 +246,19 @@ OpenAI Agents SDK는 클라이언트 라이브러리이므로 세션 저장소�
 | `SQLiteSession` | 로컬 SQLite | 기본은 인메모리 DB, 파일 경로를 주면 영속 |
 | `OpenAIConversationsSession` | **OpenAI 서버** | Conversations API와 동기화 |
 | `OpenAIResponsesCompactionSession` | 래핑한 하위 세션 | Responses API로 이력을 압축, 턴마다 자동 compaction 가능 |
-| Redis / SQLAlchemy / MongoDB / Dapr | **자체 인프라** | 공유·저지연, 기존 DB 활용, 클라우드 네이티브 배포 |
+| Redis / SQLAlchemy / MongoDB / Dapr | **자체 인프라** | 공유·저지연, 기존 DB 활용, 클라우드 네이티브 배포 [\[3\]](#ref3){:.cite} |
 
 같은 에이전트 코드에서 한 줄만 바꿔 **기억의 소유권을 로컬 ↔ 자체 DB ↔ OpenAI 서버로 이동**시킬 수 있다. 상태 소유권이 런타임 설정으로 내려온 첫 사례에 가깝다.
 
-주변 제품 상황도 정리해두자. **AgentKit**은 Agents SDK · Responses API · ChatKit · Agent Builder를 묶은 번들 브랜딩인데, 이 중 시각적 워크플로 빌더인 **Agent Builder는 2026년 11월 30일 종료 예정**이다. OpenAI는 신규 작업에 대해 ChatKit SDK + Agents SDK 기반의 **자체 서버 구현**을 권장한다. ChatKit 자체는 독립 임베더블 채팅 UI로 남고, 자체 인프라에서 셀프호스팅할 수 있다.
+주변 제품 상황도 정리해두자. **AgentKit**은 Agents SDK · Responses API · ChatKit · Agent Builder를 묶은 번들 브랜딩인데, 이 중 시각적 워크플로 빌더인 **Agent Builder는 2026년 11월 30일 종료 예정**이다. OpenAI는 신규 작업에 대해 ChatKit SDK + Agents SDK 기반의 **자체 서버 구현**을 권장한다. [\[5\]](#ref5){:.cite}[\[6\]](#ref6){:.cite} ChatKit 자체는 독립 임베더블 채팅 UI로 남고, 자체 인프라에서 셀프호스팅할 수 있다.
 
 ### 4.4 AWS Bedrock AgentCore — 런타임(L2)과 메모리(L3)를 분리 판매
 
 AWS는 이 계층을 가장 명시적으로 쪼개놓았다.
 
-**AgentCore Runtime (L2)** — 사용자 세션마다 **전용 microVM**을 할당해 컴퓨트·메모리·파일시스템을 격리한다. 세션 헤더로 같은 microVM에 라우팅하므로, 클라이언트는 응답의 세션 ID를 받아 이후 모든 요청에 넣어야 세션 어피니티가 유지된다. ARM64 컨테이너, 최대 **8시간** 실행 윈도, **15분 무활동 시 컨테이너 회수**, HTTP와 A2A 프로토콜 네이티브 지원(A2A 구성 시 포트 9000의 무상태 streamable HTTP 서버 기대). 2026년 3월에는 에이전트 파일시스템 상태를 유지하는 **managed session storage**가 프리뷰로 추가됐다.
+**AgentCore Runtime (L2)** — 사용자 세션마다 **전용 microVM**을 할당해 컴퓨트·메모리·파일시스템을 격리한다. 세션 헤더로 같은 microVM에 라우팅하므로, 클라이언트는 응답의 세션 ID를 받아 이후 모든 요청에 넣어야 세션 어피니티가 유지된다. ARM64 컨테이너, 최대 **8시간** 실행 윈도, **15분 무활동 시 컨테이너 회수**, HTTP와 A2A 프로토콜 네이티브 지원(A2A 구성 시 포트 9000의 무상태 streamable HTTP 서버 기대). 2026년 3월에는 에이전트 파일시스템 상태를 유지하는 **managed session storage**가 프리뷰로 추가됐다. [\[29\]](#ref29){:.cite}[\[30\]](#ref30){:.cite}
 
-결정적으로 **AgentCore Runtime은 프레임워크 무관(framework agnostic)이며, Amazon Bedrock·Anthropic Claude·Google Gemini·OpenAI 등 서로 다른 LLM으로 에이전트를 돌릴 수 있다.** 이게 7장 크로스오버의 핵심 재료다.
+결정적으로 **AgentCore Runtime은 프레임워크 무관(framework agnostic)이며, Amazon Bedrock·Anthropic Claude·Google Gemini·OpenAI 등 서로 다른 LLM으로 에이전트를 돌릴 수 있다.** [\[31\]](#ref31){:.cite} 이게 7장 크로스오버의 핵심 재료다.
 
 **AgentCore Memory (L3)** — 단기/장기를 명확히 나눈 별도 서비스다.
 
@@ -270,37 +270,37 @@ AWS는 이 계층을 가장 명시적으로 쪼개놓았다.
 | Session (`sessionId`) | 하나의 연속된 상호작용. 그 안의 모든 이벤트를 묶는 키 |
 | Memory strategy | 단기 → 장기 변환 규칙. 무엇을 남길지 결정 |
 | Namespace | 장기 기억을 논리적으로 묶는 구조화된 경로. 조회·필터·접근제어에 사용 |
-| Memory record | 네임스페이스 안에 저장되는 구조화된 정보 단위 |
+| Memory record | 네임스페이스 안에 저장되는 구조화된 정보 단위 [\[24\]](#ref24){:.cite} |
 
-단기는 `CreateEvent` / `GetEvent` / `ListEvents` / `DeleteEvent`로, 장기는 전략 설정 후 `RetrieveMemoryRecords` / `ListMemoryRecords` / `DeleteMemoryRecords`로 다룬다. 2026년의 주요 업데이트는 세 가지다.
+단기는 `CreateEvent` / `GetEvent` / `ListEvents` / `DeleteEvent`로, 장기는 전략 설정 후 `RetrieveMemoryRecords` / `ListMemoryRecords` / `DeleteMemoryRecords`로 다룬다. [\[25\]](#ref25){:.cite} 2026년의 주요 업데이트는 세 가지다.
 
-- **2026-03 스트리밍 알림** — 장기 메모리 레코드 생성·변경 시 푸시 알림. 폴링 제거.
-- **2026-05~06 strictly consistent metadata** — 애플리케이션이 붙인 메타데이터 값이 LLM 추론 없이 추출·통합을 그대로 통과해 장기 레코드에 도달.
-- **2026-09 `IngestData` API** — 콘텐츠를 받아 장기 메모리 전략들로 팬아웃하고, **단기 이벤트를 만들지 않고** 바로 장기 레코드를 만든다. 대화가 아닌 문서·기록물을 메모리에 넣는 경로가 열린 셈이다.
+- **2026-03 스트리밍 알림** — 장기 메모리 레코드 생성·변경 시 푸시 알림. 폴링 제거. [\[27\]](#ref27){:.cite}
+- **2026-05~06 strictly consistent metadata** — 애플리케이션이 붙인 메타데이터 값이 LLM 추론 없이 추출·통합을 그대로 통과해 장기 레코드에 도달. [\[28\]](#ref28){:.cite}
+- **2026-09 `IngestData` API** — 콘텐츠를 받아 장기 메모리 전략들로 팬아웃하고, **단기 이벤트를 만들지 않고** 바로 장기 레코드를 만든다. 대화가 아닌 문서·기록물을 메모리에 넣는 경로가 열린 셈이다. [\[26\]](#ref26){:.cite}
 
 ### 4.5 Azure Foundry Agent Service — thread/run 모델 + BYO 스토리지
 
 Azure는 OpenAI Assistants에서 유래한 **thread / run / message** 모델을 유지한다.
 
-- **Thread**는 명시적으로 삭제할 때까지 유지되고, 하나의 스레드에 최대 **100,000개 메시지**를 붙일 수 있다.
+- **Thread**는 명시적으로 삭제할 때까지 유지되고, 하나의 스레드에 최대 **100,000개 메시지**를 붙일 수 있다. [\[35\]](#ref35){:.cite}
 - **Run**은 스레드에 대해 에이전트를 기동하는 단위다. 에이전트가 자기 설정과 스레드 메시지를 읽어 모델·툴을 호출하고 새 메시지를 스레드에 덧붙인다.
 
-차별점은 **BYO Thread Storage**다. Standard agent setup에서는 스레드가 **고객 소유의 Azure Cosmos DB 계정**에 저장된다. `enterprise_memory` 데이터베이스 안에 `thread-message-store`(최종 사용자 대화), `system-thread-message-store`(내부 시스템 메시지), `agent-entity-store`(모델 입출력) 등의 컨테이너가 생성되며, 사용할 Cosmos DB 계정은 총 처리량 한도가 최소 3,000 RU/s여야 한다. Foundry Agent Service는 **non-OpenAI 모델도 지원**한다.
+차별점은 **BYO Thread Storage**다. Standard agent setup에서는 스레드가 **고객 소유의 Azure Cosmos DB 계정**에 저장된다. `enterprise_memory` 데이터베이스 안에 `thread-message-store`(최종 사용자 대화), `system-thread-message-store`(내부 시스템 메시지), `agent-entity-store`(모델 입출력) 등의 컨테이너가 생성되며, 사용할 Cosmos DB 계정은 총 처리량 한도가 최소 3,000 RU/s여야 한다. [\[37\]](#ref37){:.cite}[\[38\]](#ref38){:.cite} Foundry Agent Service는 **non-OpenAI 모델도 지원**한다. [\[40\]](#ref40){:.cite}
 
 즉 Azure는 L2 상태를 제공하면서도 **물리적 저장소 소유권은 고객에게 남기는** 유일한 메이저 옵션이다.
 
 ### 4.6 Google Vertex AI Agent Engine — Sessions(L2) + Memory Bank(L3), 프레임워크 무관
 
-Google은 Agent Engine 안에 두 메커니즘을 둔다. **Sessions**는 단기 대화 컨텍스트를, **Memory Bank**는 세션을 넘는 장기 저장을 담당한다. 둘 다 2026년 현재 GA이며, 2026년 1월 28일부터 Sessions·Memory Bank·Code Execution에 과금이 시작됐다.
+Google은 Agent Engine 안에 두 메커니즘을 둔다. **Sessions**는 단기 대화 컨텍스트를, **Memory Bank**는 세션을 넘는 장기 저장을 담당한다. 둘 다 2026년 현재 GA이며, 2026년 1월 28일부터 Sessions·Memory Bank·Code Execution에 과금이 시작됐다. [\[22\]](#ref22){:.cite}
 
 Memory Bank의 핵심 API는 두 개다.
 
 - **`GenerateMemories`** — 세션 종료나 턴 종료 같은 특정 시점에 대화에서 사실을 자동 추출한다.
 - **`RetrieveMemories`** — 저장된 기억을 조회한다. 전부 가져오는 단순 조회와, 현재 대화에 가장 관련 있는 것만 가져오는 유사도 검색 조회를 모두 지원한다.
 
-**`scope`** 는 생성된 기억의 범위를 나타내는 딕셔너리다(예: `{"session_id": "MY_SESSION"}`). **같은 스코프의 기억끼리만 통합(consolidation) 대상이 된다.** 명시적으로 스코프를 주지 않으면 세션에서 생성된 기억은 자동으로 `{"user_id": USER_ID}`로 키가 매겨진다. 멀티테넌시 설계가 이 한 필드에 달려 있다.
+**`scope`** 는 생성된 기억의 범위를 나타내는 딕셔너리다(예: `{"session_id": "MY_SESSION"}`). **같은 스코프의 기억끼리만 통합(consolidation) 대상이 된다.** 명시적으로 스코프를 주지 않으면 세션에서 생성된 기억은 자동으로 `{"user_id": USER_ID}`로 키가 매겨진다. [\[19\]](#ref19){:.cite} 멀티테넌시 설계가 이 한 필드에 달려 있다.
 
-가장 중요한 건 이거다. **Agent Engine SDK는 프레임워크 오케스트레이션 없이도, 또는 ADK가 아닌 다른 프레임워크와도 Sessions·Memory Bank를 쓸 수 있도록 설계됐다.** REST API로 직접 호출하는 경로도 문서화돼 있다. ADK·LangChain·LangGraph 등을 재작업 없이 배포할 수 있는 프레임워크 무관 배포도 지원한다.
+가장 중요한 건 이거다. **Agent Engine SDK는 프레임워크 오케스트레이션 없이도, 또는 ADK가 아닌 다른 프레임워크와도 Sessions·Memory Bank를 쓸 수 있도록 설계됐다.** REST API로 직접 호출하는 경로도 문서화돼 있다. [\[21\]](#ref21){:.cite} ADK·LangChain·LangGraph 등을 재작업 없이 배포할 수 있는 프레임워크 무관 배포도 지원한다.
 
 ### 4.7 서드파티 메모리 계층 — mem0 / Zep / Letta
 
@@ -310,7 +310,7 @@ Memory Bank의 핵심 API는 두 개다.
 | :--- | :--- | :--- |
 | **mem0** | 범용 메모리 API (add/update/delete/retrieve) | 서비스 무관. 어떤 오케스트레이터 뒤에도 놓인다. 로컬 우선 MCP 서버(OpenMemory MCP) 보유 |
 | **Zep** | 시간 인식 지식 그래프 (Graphiti 엔진) | 사실이 *언제* 학습됐고 서로 어떻게 연결되는지 보존. 공식 MCP 서버 제공 |
-| **Letta** (구 MemGPT) | 상태 저장 에이전트 OS | OS 메모리 관리에서 착안한 계층 구조를 **에이전트 자신이 편집**. MCP 클라이언트로 동작 |
+| **Letta** (구 MemGPT) | 상태 저장 에이전트 OS | OS 메모리 관리에서 착안한 계층 구조를 **에이전트 자신이 편집**. MCP 클라이언트로 동작 [\[41\]](#ref41){:.cite}[\[42\]](#ref42){:.cite}[\[43\]](#ref43){:.cite} |
 
 셋 다 Apache-2.0이고 MCP 생태계에 연결되지만 방식은 다르다. 메모리를 MCP 툴로 노출하면 **모델·프레임워크·클라우드를 전부 갈아치워도 기억은 그대로 남는다.** 락인 회피 관점에서 가장 강력한 선택지다.
 
@@ -383,8 +383,8 @@ flowchart TB
 
 무상태 모델 API에도 **서버에서 코드를 실행하는 내장 툴**이 있다. 이때만 샌드박스가 등장한다.
 
-- **OpenAI code interpreter** — 컨테이너에서 Python을 돌린다. **20분간 사용되지 않으면 만료**되고, 만료되면 컨테이너에 딸린 데이터는 시스템에서 폐기되어 복구할 수 없다. 공식 문서는 컨테이너를 ephemeral로 취급하고 데이터는 자체 시스템에 저장하라고 권고한다. 실제로 `container: "auto"`와 `previous_response_id`를 함께 쓰면 원래 컨테이너가 만료된 뒤 호출이 실패한다.
-- **Anthropic code execution tool** — 서버사이드 샌드박스 컨테이너에서 Python과 bash를 돌린다. 컨테이너 데이터(실행 산출물·업로드 파일·출력)는 최대 **30일** 보존된다. 버전이 둘인데, `code_execution_20250825`가 기본이고 `code_execution_20260120`은 **REPL 상태 지속**과 샌드박스 안에서의 프로그래밍 방식 툴 호출을 추가했다.
+- **OpenAI code interpreter** — 컨테이너에서 Python을 돌린다. **20분간 사용되지 않으면 만료**되고, 만료되면 컨테이너에 딸린 데이터는 시스템에서 폐기되어 복구할 수 없다. 공식 문서는 컨테이너를 ephemeral로 취급하고 데이터는 자체 시스템에 저장하라고 권고한다. 실제로 `container: "auto"`와 `previous_response_id`를 함께 쓰면 원래 컨테이너가 만료된 뒤 호출이 실패한다. [\[49\]](#ref49){:.cite}
+- **Anthropic code execution tool** — 서버사이드 샌드박스 컨테이너에서 Python과 bash를 돌린다. 컨테이너 데이터(실행 산출물·업로드 파일·출력)는 최대 **30일** 보존된다. 버전이 둘인데, `code_execution_20250825`가 기본이고 `code_execution_20260120`은 **REPL 상태 지속**과 샌드박스 안에서의 프로그래밍 방식 툴 호출을 추가했다. [\[48\]](#ref48){:.cite}
 
 <div class="callout callout-warn" markdown="1">
 **샌드박스 수명 ≠ 세션 수명.** OpenAI의 Conversation 객체는 30일 TTL조차 적용되지 않는데, code interpreter 컨테이너는 20분 유휴면 죽는다. "대화는 멀쩡히 이어지는데 아까 만든 파일이 사라진" 상황이 여기서 나온다.
@@ -396,8 +396,8 @@ flowchart TB
 
 | 런타임 | 격리 단위 | 수명 | 특징 |
 | :--- | :--- | :--- | :--- |
-| Claude Managed Agents | Anthropic 클라우드 컨테이너 | 세션 단위, 재개 가능 | self-hosted 샌드박스 옵션 — **툴 실행만** 자체 인프라로 옮기고 에이전트 루프·컨텍스트 관리·오류 복구는 Anthropic에 잔류. MCP 터널로 사내망 서버를 아웃바운드 연결만으로 노출 |
-| AWS AgentCore Runtime | **세션당 전용 microVM** (컴퓨트·메모리·파일시스템 격리) | 최대 8시간, **15분 무활동 시 회수** | ARM64. 세션 헤더로 동일 microVM에 라우팅. managed session storage(프리뷰)로 파일시스템 상태 유지 |
+| Claude Managed Agents | Anthropic 클라우드 컨테이너 | 세션 단위, 재개 가능 | self-hosted 샌드박스 옵션 — **툴 실행만** 자체 인프라로 옮기고 에이전트 루프·컨텍스트 관리·오류 복구는 Anthropic에 잔류. MCP 터널로 사내망 서버를 아웃바운드 연결만으로 노출 [\[14\]](#ref14){:.cite}[\[53\]](#ref53){:.cite} |
+| AWS AgentCore Runtime | **세션당 전용 microVM** (컴퓨트·메모리·파일시스템 격리) | 최대 8시간, **15분 무활동 시 회수** | ARM64. 세션 헤더로 동일 microVM에 라우팅. managed session storage(프리뷰)로 파일시스템 상태 유지 [\[29\]](#ref29){:.cite}[\[30\]](#ref30){:.cite} |
 
 L3는 실행 환경이 아니지만 한 군데서 얽힌다. Anthropic `memory_stores`는 **L2 샌드박스 안에 `/mnt/memory/<slug>/` 디렉터리로 마운트**되는 형태로 노출된다. 저장소이면서 접근 경로가 샌드박스에 의존하는 구조다.
 
@@ -406,10 +406,10 @@ L3는 실행 환경이 아니지만 한 군데서 얽힌다. Anthropic `memory_s
 쓴다. 오히려 **비코딩 쪽 동기가 더 강하다.** 세 갈래다.
 
 1. **데이터 분석·리포팅** — code interpreter의 원래 용도다. 코드를 납품하려는 게 아니라 계산·차트·파일 생성을 시킨다. 산출물이 목적이고 코드는 수단이다.
-2. **툴 오케스트레이션 수단으로서의 샌드박스** — 가장 중요한 비코딩 용례다. 모델이 툴을 하나씩 function calling으로 부르는 대신 **짧은 프로그램을 작성해** 여러 툴을 엮고, 중간 데이터는 컨텍스트에 들어오지 않고 최종 결과만 돌아온다. Anthropic 엔지니어링이 보고한 Google Drive → Salesforce 데이터 이동 사례에서 **150,000 토큰이 2,000 토큰으로(약 98.7% 감소)** 줄었고, Cloudflare는 2,500개 엔드포인트 API에서 **1.17M 토큰을 약 1,000 토큰으로** 줄였다고 보고했다. 목적은 컨텍스트 경제이고 샌드박스는 그 수단이다. 코딩과는 무관하다.
+2. **툴 오케스트레이션 수단으로서의 샌드박스** — 가장 중요한 비코딩 용례다. 모델이 툴을 하나씩 function calling으로 부르는 대신 **짧은 프로그램을 작성해** 여러 툴을 엮고, 중간 데이터는 컨텍스트에 들어오지 않고 최종 결과만 돌아온다. Anthropic 엔지니어링이 보고한 Google Drive → Salesforce 데이터 이동 사례에서 **150,000 토큰이 2,000 토큰으로(약 98.7% 감소)** 줄었고, Cloudflare는 2,500개 엔드포인트 API에서 **1.17M 토큰을 약 1,000 토큰으로** 줄였다고 보고했다. [\[50\]](#ref50){:.cite}[\[51\]](#ref51){:.cite} 목적은 컨텍스트 경제이고 샌드박스는 그 수단이다. 코딩과는 무관하다.
 3. **신뢰 경계** — 에이전트가 생성한 코드는 본질적으로 untrusted다. 격리 없이 프로덕션에서 실행할 수 없다.
 
-그 결과 코딩 에이전트 전용이 아닌 **전용 샌드박스 벤더 생태계**(Modal, Northflank, Blaxel, Cloudflare 등)가 형성됐고, 이들이 내세우는 용례도 코딩 에이전트·PR 리뷰 에이전트와 나란히 **데이터 분석 에이전트**가 올라와 있다.
+그 결과 코딩 에이전트 전용이 아닌 **전용 샌드박스 벤더 생태계**(Modal, Northflank, Blaxel, Cloudflare 등)가 형성됐고, 이들이 내세우는 용례도 코딩 에이전트·PR 리뷰 에이전트와 나란히 **데이터 분석 에이전트**가 올라와 있다. [\[54\]](#ref54){:.cite}
 
 <div class="callout callout-key" markdown="1">
 2번은 2장의 "컨텍스트 비용은 줄지 않는다"에 대한 우회로이기도 하다. 서버 세션은 토큰을 아껴주지 않지만, **중간 결과를 컨텍스트 밖(샌드박스 안)에 두는 것**은 실제로 아껴준다. 샌드박스가 메모리 계층의 일부처럼 동작하는 순간이다.
@@ -552,7 +552,7 @@ flowchart TB
 
 2장에서 봤듯 서버 세션은 토큰 비용을 줄이지 않는다. 실제로 비용을 움직이는 레버는 셋이다.
 
-- **Prompt caching** — 긴 접두사를 재사용. Anthropic은 compaction 블록과 시스템 프롬프트에 `cache_control` 브레이크포인트를 두면 캐시 적중률이 극대화된다고 안내한다. Gemini는 2.5 이후 implicit caching이 기본이고 상태/무상태 모드 모두에서 동작한다.
+- **Prompt caching** — 긴 접두사를 재사용. Anthropic은 compaction 블록과 시스템 프롬프트에 `cache_control` 브레이크포인트를 두면 캐시 적중률이 극대화된다고 안내한다. [\[11\]](#ref11){:.cite} Gemini는 2.5 이후 implicit caching이 기본이고 상태/무상태 모드 모두에서 동작한다. [\[17\]](#ref17){:.cite}
 - **Compaction / context editing** — 이력 자체를 줄인다. Anthropic의 `compact_20260112`가 가장 형식화된 형태고, OpenAI 쪽은 `OpenAIResponsesCompactionSession`이 대응된다.
 - **장기 메모리로 옮기기** — 전체 대화를 컨텍스트에 유지하는 대신 추출된 사실만 조회한다. AgentCore Memory·Memory Bank의 존재 이유가 사실상 이것이다. Vertex는 유사도 검색 조회를 지원해 "관련된 기억만" 넣을 수 있다.
 
@@ -620,62 +620,129 @@ flowchart TD
 
 ## 10. 참고문헌 {#sec10}
 
-> 상세 목록은 [model-agent-api-session-memory-references.xlsx](./model-agent-api-session-memory-references.xlsx) 참고.
+> 본문의 `[N]`을 누르면 아래 해당 항목으로 이동한다. 번호는 [model-agent-api-session-memory-references.xlsx](./model-agent-api-session-memory-references.xlsx)의 `번호` 컬럼과 1:1로 일치하며, 스프레드시트에는 항목별 한국어 요약이 함께 들어 있다.
 
 **OpenAI**
-- Conversation state — https://developers.openai.com/api/docs/guides/conversation-state
-- Migrate to the Responses API — https://developers.openai.com/api/docs/guides/migrate-to-responses
-- Agents SDK Sessions (Python) — https://openai.github.io/openai-agents-python/sessions/
-- Agents SDK Models (LiteLLM/Any-LLM) — https://openai.github.io/openai-agents-python/models/
-- ChatKit / Agent Builder — https://developers.openai.com/api/docs/guides/chatkit · https://developers.openai.com/api/docs/guides/agent-builder
-- Introducing AgentKit — https://openai.com/index/introducing-agentkit/
+
+<span id="ref1"></span>**[1]** Conversation state — OpenAI 공식 문서 · [https://developers.openai.com/api/docs/guides/conversation-state](https://developers.openai.com/api/docs/guides/conversation-state)
+
+<span id="ref2"></span>**[2]** Migrate to the Responses API — OpenAI 공식 문서 · [https://developers.openai.com/api/docs/guides/migrate-to-responses](https://developers.openai.com/api/docs/guides/migrate-to-responses)
+
+<span id="ref3"></span>**[3]** Sessions — OpenAI Agents SDK (Python) — OpenAI Agents SDK 문서 · [https://openai.github.io/openai-agents-python/sessions/](https://openai.github.io/openai-agents-python/sessions/)
+
+<span id="ref4"></span>**[4]** Models — OpenAI Agents SDK (LiteLLM / Any-LLM) — OpenAI Agents SDK 문서 · [https://openai.github.io/openai-agents-python/models/](https://openai.github.io/openai-agents-python/models/)
+
+<span id="ref5"></span>**[5]** Introducing AgentKit — OpenAI · [https://openai.com/index/introducing-agentkit/](https://openai.com/index/introducing-agentkit/)
+
+<span id="ref6"></span>**[6]** ChatKit 가이드 — OpenAI 공식 문서 · [https://developers.openai.com/api/docs/guides/chatkit](https://developers.openai.com/api/docs/guides/chatkit)
 
 **Anthropic**
-- Claude Managed Agents overview — https://platform.claude.com/docs/en/managed-agents/overview
-- Start a session — https://platform.claude.com/docs/en/managed-agents/sessions
-- Using agent memory (memory stores) — https://platform.claude.com/docs/en/managed-agents/memory
-- Self-hosted sandboxes / MCP tunnels — https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes · https://claude.com/blog/claude-managed-agents-updates
-- Context editing — https://platform.claude.com/docs/en/build-with-claude/context-editing
-- Compaction — https://platform.claude.com/docs/en/build-with-claude/compaction
-- Memory tool — https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool
-- Agent SDK sessions — https://code.claude.com/docs/en/agent-sdk/sessions
+
+<span id="ref7"></span>**[7]** Claude Managed Agents overview — Anthropic 공식 문서 · [https://platform.claude.com/docs/en/managed-agents/overview](https://platform.claude.com/docs/en/managed-agents/overview)
+
+<span id="ref8"></span>**[8]** Start a session (Managed Agents) — Anthropic 공식 문서 · [https://platform.claude.com/docs/en/managed-agents/sessions](https://platform.claude.com/docs/en/managed-agents/sessions)
+
+<span id="ref9"></span>**[9]** Using agent memory (memory stores) — Anthropic 공식 문서 · [https://platform.claude.com/docs/en/managed-agents/memory](https://platform.claude.com/docs/en/managed-agents/memory)
+
+<span id="ref10"></span>**[10]** Context editing — Anthropic 공식 문서 · [https://platform.claude.com/docs/en/build-with-claude/context-editing](https://platform.claude.com/docs/en/build-with-claude/context-editing)
+
+<span id="ref11"></span>**[11]** Compaction — Anthropic 공식 문서 · [https://platform.claude.com/docs/en/build-with-claude/compaction](https://platform.claude.com/docs/en/build-with-claude/compaction)
+
+<span id="ref12"></span>**[12]** Memory tool — Anthropic 공식 문서 · [https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool)
+
+<span id="ref13"></span>**[13]** Work with sessions (Claude Agent SDK) — Claude Code 문서 · [https://code.claude.com/docs/en/agent-sdk/sessions](https://code.claude.com/docs/en/agent-sdk/sessions)
+
+<span id="ref14"></span>**[14]** New in Claude Managed Agents: self-hosted sandboxes and MCP tunnels — Anthropic 블로그 · [https://claude.com/blog/claude-managed-agents-updates](https://claude.com/blog/claude-managed-agents-updates)
 
 **Google**
-- Gemini Interactions API overview — https://ai.google.dev/gemini-api/docs/interactions-overview
-- Gemini generateContent — https://ai.google.dev/gemini-api/docs/interactions
-- Context caching — https://ai.google.dev/gemini-api/docs/caching
-- Vertex AI Agent Engine Memory Bank overview — https://cloud.google.com/agent-builder/agent-engine/memory-bank/overview
-- Generate memories / Fetch memories — https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/generate-memories · .../fetch-memories
-- Memory Bank public preview 발표 — https://cloud.google.com/blog/products/ai-machine-learning/vertex-ai-memory-bank-in-public-preview
+
+<span id="ref15"></span>**[15]** Interactions API overview — Google AI for Developers · [https://ai.google.dev/gemini-api/docs/interactions-overview](https://ai.google.dev/gemini-api/docs/interactions-overview)
+
+<span id="ref16"></span>**[16]** Gemini generateContent API — Google AI for Developers · [https://ai.google.dev/gemini-api/docs/interactions](https://ai.google.dev/gemini-api/docs/interactions)
+
+<span id="ref17"></span>**[17]** Context caching — Google AI for Developers · [https://ai.google.dev/gemini-api/docs/caching](https://ai.google.dev/gemini-api/docs/caching)
+
+<span id="ref18"></span>**[18]** Vertex AI Agent Engine Memory Bank overview — Google Cloud 문서 · [https://cloud.google.com/agent-builder/agent-engine/memory-bank/overview](https://cloud.google.com/agent-builder/agent-engine/memory-bank/overview)
+
+<span id="ref19"></span>**[19]** Generate memories / Fetch memories — Google Cloud 문서 · [https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/generate-memories](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/generate-memories)
+
+<span id="ref20"></span>**[20]** Vertex AI Memory Bank in public preview — Google Cloud 블로그 · [https://cloud.google.com/blog/products/ai-machine-learning/vertex-ai-memory-bank-in-public-preview](https://cloud.google.com/blog/products/ai-machine-learning/vertex-ai-memory-bank-in-public-preview)
+
+<span id="ref21"></span>**[21]** Quickstart with Vertex AI Agent Engine SDK — Google Cloud 문서 · [https://docs.cloud.google.com/agent-builder/agent-engine/memory-bank/quickstart-api](https://docs.cloud.google.com/agent-builder/agent-engine/memory-bank/quickstart-api)
+
+<span id="ref22"></span>**[22]** Vertex AI release notes — Google Cloud 문서 · [https://docs.cloud.google.com/vertex-ai/generative-ai/docs/release-notes](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/release-notes)
 
 **AWS**
-- AgentCore Memory 개요 / how it works / terminology — https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory.html
-- 단기 메모리 / 장기 메모리 — https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-memory-short-term.html · .../long-term-memory-long-term.html
-- `IngestData` API (2026-09) — https://aws.amazon.com/about-aws/whats-new/2026/09/agentcore-memory-direct-ingest/
-- 스트리밍 알림 (2026-03) — https://aws.amazon.com/about-aws/whats-new/2026/03/agentcore-memory-streaming-ltm
-- Runtime 세션 격리 — https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html
-- Managed session storage 프리뷰 — https://aws.amazon.com/about-aws/whats-new/2026/03/bedrock-agentcore-runtime-session-storage
-- Bedrock Session Management APIs — https://docs.aws.amazon.com/bedrock/latest/userguide/sessions.html · https://aws.amazon.com/blogs/machine-learning/amazon-bedrock-launches-session-management-apis-for-generative-ai-applications-preview/
+
+<span id="ref23"></span>**[23]** Add memory to your Amazon Bedrock AgentCore agent — AWS 공식 문서 · [https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory.html](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory.html)
+
+<span id="ref24"></span>**[24]** AgentCore Memory terminology — AWS 공식 문서 · [https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-terminology.html](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-terminology.html)
+
+<span id="ref25"></span>**[25]** Use short-term / long-term memory — AWS 공식 문서 · [https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-memory-short-term.html](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-memory-short-term.html)
+
+<span id="ref26"></span>**[26]** AgentCore Memory — direct ingestion to long-term memory (IngestData) — AWS What's New · [https://aws.amazon.com/about-aws/whats-new/2026/09/agentcore-memory-direct-ingest/](https://aws.amazon.com/about-aws/whats-new/2026/09/agentcore-memory-direct-ingest/)
+
+<span id="ref27"></span>**[27]** AgentCore Memory — streaming notifications — AWS What's New · [https://aws.amazon.com/about-aws/whats-new/2026/03/agentcore-memory-streaming-ltm](https://aws.amazon.com/about-aws/whats-new/2026/03/agentcore-memory-streaming-ltm)
+
+<span id="ref28"></span>**[28]** AgentCore Memory — strictly consistent metadata — AWS What's New · [https://aws.amazon.com/about-aws/whats-new/2026/05/agentcore-memory-scmetadata/](https://aws.amazon.com/about-aws/whats-new/2026/05/agentcore-memory-scmetadata/)
+
+<span id="ref29"></span>**[29]** Use isolated sessions for agents (AgentCore Runtime) — AWS 공식 문서 · [https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html)
+
+<span id="ref30"></span>**[30]** AgentCore Runtime managed session storage (preview) — AWS What's New · [https://aws.amazon.com/about-aws/whats-new/2026/03/bedrock-agentcore-runtime-session-storage](https://aws.amazon.com/about-aws/whats-new/2026/03/bedrock-agentcore-runtime-session-storage)
+
+<span id="ref31"></span>**[31]** Evaluate any agent framework with AgentCore Evaluations — AWS 블로그 · [https://aws.amazon.com/blogs/machine-learning/evaluate-any-agent-framework-with-amazon-bedrock-agentcore-evaluations/](https://aws.amazon.com/blogs/machine-learning/evaluate-any-agent-framework-with-amazon-bedrock-agentcore-evaluations/)
+
+<span id="ref32"></span>**[32]** Store and retrieve conversation history with session management APIs — AWS 공식 문서 · [https://docs.aws.amazon.com/bedrock/latest/userguide/sessions.html](https://docs.aws.amazon.com/bedrock/latest/userguide/sessions.html)
+
+<span id="ref33"></span>**[33]** Amazon Bedrock launches Session Management APIs (Preview) — AWS 블로그 · [https://aws.amazon.com/blogs/machine-learning/amazon-bedrock-launches-session-management-apis-for-generative-ai-applications-preview/](https://aws.amazon.com/blogs/machine-learning/amazon-bedrock-launches-session-management-apis-for-generative-ai-applications-preview/)
+
+<span id="ref34"></span>**[34]** Amazon Bedrock Converse API Deep Dive — hidekazu-konishi.com (2차 출처) · [https://hidekazu-konishi.com/entry/amazon_bedrock_converse_api_deep_dive.html](https://hidekazu-konishi.com/entry/amazon_bedrock_converse_api_deep_dive.html)
 
 **Microsoft Azure**
-- Threads, Runs, Messages — https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/threads-runs-messages
-- Azure OpenAI Responses API — https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/responses
-- BYO Thread Storage (Cosmos DB) — https://devblogs.microsoft.com/cosmosdb/azure-ai-foundry-connection-for-azure-cosmos-db-and-byo-thread-storage-in-azure-ai-agent-service/
-- Standard agent setup — https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/standard-agent-setup
+
+<span id="ref35"></span>**[35]** Threads, Runs, and Messages in the Foundry Agent Service — Microsoft Learn · [https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/threads-runs-messages](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/threads-runs-messages)
+
+<span id="ref36"></span>**[36]** Use the Azure OpenAI Responses API — Microsoft Learn · [https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/responses](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/responses)
+
+<span id="ref37"></span>**[37]** Azure AI Foundry Connection for Cosmos DB and BYO Thread Storage — Azure Cosmos DB 블로그 · [https://devblogs.microsoft.com/cosmosdb/azure-ai-foundry-connection-for-azure-cosmos-db-and-byo-thread-storage-in-azure-ai-agent-service/](https://devblogs.microsoft.com/cosmosdb/azure-ai-foundry-connection-for-azure-cosmos-db-and-byo-thread-storage-in-azure-ai-agent-service/)
+
+<span id="ref38"></span>**[38]** Set up standard agent resources for Foundry Agent Service — Microsoft Learn · [https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/standard-agent-setup](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/standard-agent-setup)
+
+<span id="ref39"></span>**[39]** Data, privacy, and security for Foundry Models — Microsoft Learn · [https://learn.microsoft.com/en-us/azure/foundry/responsible-ai/openai/data-privacy](https://learn.microsoft.com/en-us/azure/foundry/responsible-ai/openai/data-privacy)
+
+<span id="ref40"></span>**[40]** What is Microsoft Foundry Agent Service? — Microsoft Learn · [https://learn.microsoft.com/en-us/azure/foundry/agents/overview](https://learn.microsoft.com/en-us/azure/foundry/agents/overview)
+
+**서드파티 메모리 / 개념**
+
+<span id="ref41"></span>**[41]** Mem0 vs Zep — 프로덕션 에이전트 메모리 비교 — Mem0 블로그 (벤더 자료) · [https://mem0.ai/blog/mem0-vs-zep](https://mem0.ai/blog/mem0-vs-zep)
+
+<span id="ref42"></span>**[42]** Mem0 vs Letta vs Zep: Which Should You Use for Agent Memory? — DEV Community (2차 출처) · [https://dev.to/plur9/mem0-vs-letta-vs-zep-which-should-you-use-for-agent-memory-1n8m](https://dev.to/plur9/mem0-vs-letta-vs-zep-which-should-you-use-for-agent-memory-1n8m)
+
+<span id="ref43"></span>**[43]** MemGPT: Towards LLMs as Operating Systems — Packer et al., arXiv:2310.08560 · [https://arxiv.org/abs/2310.08560](https://arxiv.org/abs/2310.08560)
+
+<span id="ref44"></span>**[44]** Exploring Anthropic's Memory Tool — Leonie Monigatti (2차 출처) · [https://www.leoniemonigatti.com/blog/claude-memory-tool.html](https://www.leoniemonigatti.com/blog/claude-memory-tool.html)
+
+<span id="ref45"></span>**[45]** Stateful Agents on Amazon Bedrock: How AgentCore Runtime Solves the Memory Problem — Data Reply IT, Medium (2차 출처) · [https://medium.com/data-reply-it-datatech/stateful-agents-on-amazon-bedrock-how-agentcore-runtime-solves-the-memory-problem-74ba885776e7](https://medium.com/data-reply-it-datatech/stateful-agents-on-amazon-bedrock-how-agentcore-runtime-solves-the-memory-problem-74ba885776e7)
+
+<span id="ref46"></span>**[46]** Architecting Stateful Agents with the Gemini Interactions API — Google Cloud Community, Medium (2차 출처) · [https://medium.com/google-cloud/architecting-stateful-agents-with-the-gemini-interactions-api-279b195c0818](https://medium.com/google-cloud/architecting-stateful-agents-with-the-gemini-interactions-api-279b195c0818)
+
+<span id="ref47"></span>**[47]** The whole point of OpenAI's Responses API — Sean Goedecke (2차 출처) · [https://www.seangoedecke.com/responses-api/](https://www.seangoedecke.com/responses-api/)
 
 **샌드박스 / 코드 실행 (6장)**
-- Anthropic, *Code execution tool* — https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool
-- OpenAI, *Code Interpreter* — https://developers.openai.com/api/docs/guides/tools-code-interpreter
-- Anthropic, *Code execution with MCP* — https://www.anthropic.com/engineering/code-execution-with-mcp
-- Cloudflare, *Code Mode: the better way to use MCP* — https://blog.cloudflare.com/code-mode/
-- AWS, *Use isolated sessions for agents (AgentCore Runtime)* — https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html
-- Anthropic, *Self-hosted sandboxes* — https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes
-- 샌드박스 플랫폼 비교 (2026) — Northflank · Modal · Blaxel 등 벤더 블로그 (2차 출처)
 
-**서드파티 메모리**
-- mem0 — https://mem0.ai/blog/mem0-vs-zep · Zep(Graphiti) · Letta(구 MemGPT)
-- MemGPT 논문 — https://arxiv.org/abs/2310.08560
+<span id="ref48"></span>**[48]** Code execution tool — Anthropic 공식 문서 · [https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool)
 
+<span id="ref49"></span>**[49]** Code Interpreter — OpenAI 공식 문서 · [https://developers.openai.com/api/docs/guides/tools-code-interpreter](https://developers.openai.com/api/docs/guides/tools-code-interpreter)
+
+<span id="ref50"></span>**[50]** Code execution with MCP — Anthropic 엔지니어링 · [https://www.anthropic.com/engineering/code-execution-with-mcp](https://www.anthropic.com/engineering/code-execution-with-mcp)
+
+<span id="ref51"></span>**[51]** Code Mode: the better way to use MCP — Cloudflare 블로그 · [https://blog.cloudflare.com/code-mode/](https://blog.cloudflare.com/code-mode/)
+
+<span id="ref52"></span>**[52]** Use isolated sessions for agents (AgentCore Runtime) — [29]와 동일 문서 — AWS 공식 문서 · [https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html)
+
+<span id="ref53"></span>**[53]** Self-hosted sandboxes — Anthropic 공식 문서 · [https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes](https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes)
+
+<span id="ref54"></span>**[54]** Best Code Execution Sandboxes for AI Agents (2026) — Modal · Northflank · Blaxel 등 벤더 블로그 (2차 출처) · [https://modal.com/resources/best-code-execution-sandboxes-ai-agents](https://modal.com/resources/best-code-execution-sandboxes-ai-agents)
 > **소싱 노트**: 본 리서치는 각 벤더의 공식 문서를 우선 출처로 삼았고(Anthropic·AWS·Google·Microsoft·OpenAI 공식 docs 직접 조회), 일부 항목은 검색 결과가 노출한 문서 발췌에 의존했다. 특히 (1) Azure의 Conversations 엔드포인트 가용성, (2) 서드파티 메모리 제품들의 2026년 기능 현황, (3) 6.4절의 토큰 절감 수치(Anthropic 150k→2k, Cloudflare 1.17M→~1k) — 이 셋은 벤더/리전별 편차가 크거나 2차 매체 인용을 거쳤으므로, 도입 판단이나 재인용 전에 원문 대조를 권한다. 베타 헤더와 API 이름은 2026년 9월 기준이며 베타 단계 기능은 변경될 수 있다.
 
 ---

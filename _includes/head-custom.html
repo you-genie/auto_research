@@ -61,6 +61,13 @@
   .callout-warn{ background:#fff7ed; border-color:#f3d3a4; }
   .callout-warn::before{ content:"⚠️ 함정"; display:block; font-weight:700; color:#a05a10; margin-bottom:.35em; }
 
+  /* 인라인 인용 [N] */
+  .main-content a.cite { font-size:.72em; font-weight:700; color:#2b6cb0; text-decoration:none;
+    vertical-align:super; line-height:0; padding:0 .08em; white-space:nowrap; }
+  .main-content a.cite:hover { color:#c0392b; text-decoration:none; }
+  /* 참고문헌 앵커로 점프했을 때 헤더에 가리지 않도록 */
+  .main-content [id^="ref"] { scroll-margin-top: 1.2em; }
+
   /* 목차 */
   .toc{ background:#f7fafc; border:1px solid #e2e8f0; border-radius:10px; padding:.9em 1.4em 1.1em; margin:1.4em 0; }
   .toc .toc-title{ color:#1F4E79; font-weight:700; }
