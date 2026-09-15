@@ -26,11 +26,12 @@ tags: [openai, anthropic, azure, bedrock, agentcore, vertex-ai, gemini, response
 3. [모델 API 계층: 벤더별 해부](#sec3)
 4. [에이전트 API 계층: 벤더별 해부](#sec4)
 5. [모델 API와 에이전트 API는 무엇이 다른가](#sec5)
-6. [같이 쓰는 경우 — 직교 매트릭스와 실제 조합](#sec6)
-7. [실무 결정 기준 — 거버넌스·비용·락인](#sec7)
-8. [요약 치트시트](#sec8)
-9. [참고문헌](#sec9)
-10. [학습 퀴즈](#sec10)
+6. [샌드박스와 실행 경계](#sec6)
+7. [같이 쓰는 경우 — 직교 매트릭스와 실제 조합](#sec7)
+8. [실무 결정 기준 — 거버넌스·비용·락인](#sec8)
+9. [요약 치트시트](#sec9)
+10. [참고문헌](#sec10)
+11. [학습 퀴즈](#sec11)
 </div>
 
 ---
@@ -47,13 +48,18 @@ flowchart TB
     L1["<b>L1 · 대화 로그 보관</b><br/>서버가 transcript를 저장, 클라이언트는 포인터만 전달<br/>Responses/Conversations · Interactions · Bedrock Sessions"]
     L2["<b>L2 · 실행 상태 보관</b><br/>대화 + 샌드박스 파일시스템 + 툴 상태까지 서버 소유<br/>Managed Agents · Foundry threads · AgentCore Runtime · Agent Engine"]
     L3["<b>L3 · 장기 기억 추출</b><br/>세션 경계를 넘어 사실·선호·요약을 뽑아 영구 보관<br/>AgentCore Memory · Memory Bank · memory_stores · mem0/Zep/Letta"]
-    L0 --> L1 --> L2 --> L3
+    L0 e1@--> L1
+    L1 e2@--> L2
+    L2 e3@--> L3
+    e1@{ animation: fast }
+    e2@{ animation: fast }
+    e3@{ animation: fast }
   end
   classDef lvl fill:#eef4fb,stroke:#4a7fb5,stroke-width:1px,color:#1F4E79;
   class L0,L1,L2,L3 lvl;
 ```
 
-여기서 중요한 건 **L0~L2가 "이번 대화"의 축이고, L3는 "대화들 사이"의 축이라 서로 직교한다**는 점이다. L0(완전 무상태 모델 API)에 L3(장기 메모리 서비스)를 붙이는 조합이 가능하고, 실제로 가장 흔한 프로덕션 패턴이기도 하다. 5장·6장에서 다시 다룬다.
+여기서 중요한 건 **L0~L2가 "이번 대화"의 축이고, L3는 "대화들 사이"의 축이라 서로 직교한다**는 점이다. L0(완전 무상태 모델 API)에 L3(장기 메모리 서비스)를 붙이는 조합이 가능하고, 실제로 가장 흔한 프로덕션 패턴이기도 하다. 5장·7장에서 다시 다룬다.
 
 | 단계 | 서버가 가지는 것 | 클라이언트가 보내는 것 | 세션이 끊기면 |
 | :--- | :--- | :--- | :--- |
@@ -97,7 +103,7 @@ sequenceDiagram
 
 - **비용은 줄지 않는다.** OpenAI 문서는 `previous_response_id`로 체인을 이으면 *"체인에 속한 모든 이전 입력 토큰이 입력 토큰으로 과금된다"* 고 명시한다. 서버 세션은 네트워크 페이로드를 줄여줄 뿐 컨텍스트 비용을 줄여주지 않는다. 비용을 실제로 줄이는 건 prompt caching과 compaction 쪽이다.
 - **컨텍스트 윈도우 한계는 그대로다.** 서버가 보관해준다고 100만 토큰짜리 대화가 마법처럼 들어가지 않는다. 그래서 L1·L2 제품들은 거의 예외 없이 별도의 요약·compaction 레이어를 함께 내놓는다.
-- **데이터는 벤더 쪽에 남는다.** L0에서는 요청이 끝나면 아무것도 남지 않지만, L1 이상에서는 대화가 벤더 인프라에 저장된다. 이 차이가 6·7장의 거버넌스 논의 전부를 만든다.
+- **데이터는 벤더 쪽에 남는다.** L0에서는 요청이 끝나면 아무것도 남지 않지만, L1 이상에서는 대화가 벤더 인프라에 저장된다. 이 차이가 7·8장의 거버넌스 논의 전부를 만든다.
 
 ---
 
@@ -252,7 +258,7 @@ AWS는 이 계층을 가장 명시적으로 쪼개놓았다.
 
 **AgentCore Runtime (L2)** — 사용자 세션마다 **전용 microVM**을 할당해 컴퓨트·메모리·파일시스템을 격리한다. 세션 헤더로 같은 microVM에 라우팅하므로, 클라이언트는 응답의 세션 ID를 받아 이후 모든 요청에 넣어야 세션 어피니티가 유지된다. ARM64 컨테이너, 최대 **8시간** 실행 윈도, **15분 무활동 시 컨테이너 회수**, HTTP와 A2A 프로토콜 네이티브 지원(A2A 구성 시 포트 9000의 무상태 streamable HTTP 서버 기대). 2026년 3월에는 에이전트 파일시스템 상태를 유지하는 **managed session storage**가 프리뷰로 추가됐다.
 
-결정적으로 **AgentCore Runtime은 프레임워크 무관(framework agnostic)이며, Amazon Bedrock·Anthropic Claude·Google Gemini·OpenAI 등 서로 다른 LLM으로 에이전트를 돌릴 수 있다.** 이게 6장 크로스오버의 핵심 재료다.
+결정적으로 **AgentCore Runtime은 프레임워크 무관(framework agnostic)이며, Amazon Bedrock·Anthropic Claude·Google Gemini·OpenAI 등 서로 다른 LLM으로 에이전트를 돌릴 수 있다.** 이게 7장 크로스오버의 핵심 재료다.
 
 **AgentCore Memory (L3)** — 단기/장기를 명확히 나눈 별도 서비스다.
 
@@ -340,7 +346,99 @@ Memory Bank의 핵심 API는 두 개다.
 
 ---
 
-## 6. 같이 쓰는 경우 — 직교 매트릭스와 실제 조합 {#sec6}
+## 6. 샌드박스와 실행 경계 {#sec6}
+
+5장의 "툴 실행이 서버로 가면 상태도 서버로 간다"를 한 겹 더 파면 **샌드박스**가 나온다. 그런데 샌드박스 축은 상태 소유권 축과 **깔끔하게 겹치지 않는다.** L0에도 샌드박스가 생길 수 있다 — 다만 "세션의 일부"가 아니라 **툴에 딸린 부속물**로.
+
+### 6.1 두 종류의 샌드박스
+
+```mermaid
+flowchart TB
+  subgraph T["🧩 툴 샌드박스 · L0~L1"]
+    T1["코드 실행 <b>툴</b>을 붙였을 때만 생김"]
+    T2["대화와 수명이 따로 논다"]
+    T3["만료되면 산출물 소멸"]
+  end
+  subgraph S["📦 세션 샌드박스 · L2"]
+    S1["세션 그 자체가 샌드박스"]
+    S2["파일시스템·프로세스를 세션이 소유"]
+    S3["재개·회수를 런타임이 관리"]
+  end
+  T s1@--> S
+  s1@{ animation: fast }
+  classDef t fill:#f7f3fa,stroke:#8a6fae,color:#3d2a55;
+  classDef s fill:#eef4fb,stroke:#4a7fb5,color:#1F4E79;
+  class T1,T2,T3 t;
+  class S1,S2,S3 s;
+```
+
+| 단계 | 샌드박스 | 정체 | 수명을 정하는 것 |
+| :--- | :---: | :--- | :--- |
+| L0 | 툴 한정 | 코드 실행 툴을 붙였을 때만 뜨는 임시 컨테이너 | 툴 컨테이너 정책 |
+| L1 | 툴 한정 | 동일. 서버가 저장하는 건 transcript뿐 | 툴 컨테이너 정책 |
+| **L2** | **본체** | 세션 그 자체. 파일시스템·프로세스를 세션이 소유 | 런타임(유휴 회수·최대 실행 시간) |
+| L3 | 없음 | 기억은 저장소지 실행 환경이 아님 | 해당 없음 |
+
+### 6.2 L0·L1의 "툴 샌드박스" — 수명이 어긋난다
+
+무상태 모델 API에도 **서버에서 코드를 실행하는 내장 툴**이 있다. 이때만 샌드박스가 등장한다.
+
+- **OpenAI code interpreter** — 컨테이너에서 Python을 돌린다. **20분간 사용되지 않으면 만료**되고, 만료되면 컨테이너에 딸린 데이터는 시스템에서 폐기되어 복구할 수 없다. 공식 문서는 컨테이너를 ephemeral로 취급하고 데이터는 자체 시스템에 저장하라고 권고한다. 실제로 `container: "auto"`와 `previous_response_id`를 함께 쓰면 원래 컨테이너가 만료된 뒤 호출이 실패한다.
+- **Anthropic code execution tool** — 서버사이드 샌드박스 컨테이너에서 Python과 bash를 돌린다. 컨테이너 데이터(실행 산출물·업로드 파일·출력)는 최대 **30일** 보존된다. 버전이 둘인데, `code_execution_20250825`가 기본이고 `code_execution_20260120`은 **REPL 상태 지속**과 샌드박스 안에서의 프로그래밍 방식 툴 호출을 추가했다.
+
+<div class="callout callout-warn" markdown="1">
+**샌드박스 수명 ≠ 세션 수명.** OpenAI의 Conversation 객체는 30일 TTL조차 적용되지 않는데, code interpreter 컨테이너는 20분 유휴면 죽는다. "대화는 멀쩡히 이어지는데 아까 만든 파일이 사라진" 상황이 여기서 나온다.
+
+두 수명이 다른 주체에 의해 관리된다는 걸 전제로 설계해야 한다. 산출물은 만들자마자 내 스토리지로 꺼내는 것이 안전하다.
+</div>
+
+### 6.3 L2의 "세션 샌드박스" — 여기서만 1급 시민
+
+| 런타임 | 격리 단위 | 수명 | 특징 |
+| :--- | :--- | :--- | :--- |
+| Claude Managed Agents | Anthropic 클라우드 컨테이너 | 세션 단위, 재개 가능 | self-hosted 샌드박스 옵션 — **툴 실행만** 자체 인프라로 옮기고 에이전트 루프·컨텍스트 관리·오류 복구는 Anthropic에 잔류. MCP 터널로 사내망 서버를 아웃바운드 연결만으로 노출 |
+| AWS AgentCore Runtime | **세션당 전용 microVM** (컴퓨트·메모리·파일시스템 격리) | 최대 8시간, **15분 무활동 시 회수** | ARM64. 세션 헤더로 동일 microVM에 라우팅. managed session storage(프리뷰)로 파일시스템 상태 유지 |
+
+L3는 실행 환경이 아니지만 한 군데서 얽힌다. Anthropic `memory_stores`는 **L2 샌드박스 안에 `/mnt/memory/<slug>/` 디렉터리로 마운트**되는 형태로 노출된다. 저장소이면서 접근 경로가 샌드박스에 의존하는 구조다.
+
+### 6.4 코딩 에이전트 밖에서도 샌드박스를 쓰는가
+
+쓴다. 오히려 **비코딩 쪽 동기가 더 강하다.** 세 갈래다.
+
+1. **데이터 분석·리포팅** — code interpreter의 원래 용도다. 코드를 납품하려는 게 아니라 계산·차트·파일 생성을 시킨다. 산출물이 목적이고 코드는 수단이다.
+2. **툴 오케스트레이션 수단으로서의 샌드박스** — 가장 중요한 비코딩 용례다. 모델이 툴을 하나씩 function calling으로 부르는 대신 **짧은 프로그램을 작성해** 여러 툴을 엮고, 중간 데이터는 컨텍스트에 들어오지 않고 최종 결과만 돌아온다. Anthropic 엔지니어링이 보고한 Google Drive → Salesforce 데이터 이동 사례에서 **150,000 토큰이 2,000 토큰으로(약 98.7% 감소)** 줄었고, Cloudflare는 2,500개 엔드포인트 API에서 **1.17M 토큰을 약 1,000 토큰으로** 줄였다고 보고했다. 목적은 컨텍스트 경제이고 샌드박스는 그 수단이다. 코딩과는 무관하다.
+3. **신뢰 경계** — 에이전트가 생성한 코드는 본질적으로 untrusted다. 격리 없이 프로덕션에서 실행할 수 없다.
+
+그 결과 코딩 에이전트 전용이 아닌 **전용 샌드박스 벤더 생태계**(Modal, Northflank, Blaxel, Cloudflare 등)가 형성됐고, 이들이 내세우는 용례도 코딩 에이전트·PR 리뷰 에이전트와 나란히 **데이터 분석 에이전트**가 올라와 있다.
+
+<div class="callout callout-key" markdown="1">
+2번은 2장의 "컨텍스트 비용은 줄지 않는다"에 대한 우회로이기도 하다. 서버 세션은 토큰을 아껴주지 않지만, **중간 결과를 컨텍스트 밖(샌드박스 안)에 두는 것**은 실제로 아껴준다. 샌드박스가 메모리 계층의 일부처럼 동작하는 순간이다.
+</div>
+
+### 6.5 로컬 하네스 API와 서버 API는 무엇이 다른가
+
+같은 "에이전트 SDK"라도 **전송 방식이 다르면 가능한 일 자체가 달라진다.**
+
+| 축 | 로컬 하네스 API<br/>(Claude Agent SDK, OpenAI Agents SDK) | 서버 API<br/>(Managed Agents, AgentCore) |
+| :--- | :--- | :--- |
+| 전송 | 라이브러리 호출 · 서브프로세스 stdio | HTTP + SSE |
+| 툴 실행 위치 | **내 OS, 실제 내 파일** | 벤더 샌드박스 |
+| 사람 개입 | **동기 콜백** — 툴 실행 직전에 가로채 변조·거부 | 비동기 이벤트 — `user.tool_confirmation` 같은 이벤트로 응답 |
+| 인증 | 내 셸 환경·자격증명 그대로 | 볼트에 OAuth 위임, 벤더가 토큰 갱신 대행 |
+| 상태 | 로컬 `.jsonl` (resume · fork) | 서버 세션 (재개 · 스케줄 실행) |
+| 수명 | 프로세스가 살아있는 동안 | 세션 정책 (8시간 · 유휴 회수 · cron) |
+| 멀티테넌시 | 사실상 1인용 | 사용자별 격리가 기본 |
+
+실질적으로 갈리는 지점은 둘이다.
+
+- **동기 훅의 유무.** 로컬 하네스는 "이 명령을 실행할까요?"를 함수 반환값으로 막을 수 있다. 서버 API는 이벤트를 받아 응답을 되돌려주는 왕복 구조라 프로그래밍 모델 자체가 다르다.
+- **"내 파일"이냐 "복제본"이냐.** 로컬 하네스는 실제 작업 디렉터리를 건드린다. 서버는 샌드박스에서 만들어진 산출물을 명시적으로 꺼내와야 한다.
+
+그래서 선택 기준은 기능이 아니라 **누가 옆에 있는가**로 갈린다. 개발자가 터미널 앞에 앉아 있으면 로컬 하네스, 최종 사용자 수천 명이 각자 세션을 돌리면 서버 API다.
+
+---
+
+## 7. 같이 쓰는 경우 — 직교 매트릭스와 실제 조합 {#sec7}
 
 이제 사용자가 던진 세 번째 질문이다. **모델 API와 에이전트 API를 같이 쓸 수 있는가, 그러면 메모리는 어디에 쌓이는가.**
 
@@ -370,7 +468,10 @@ flowchart LR
     C4["Memory Bank<br/>memory_stores"]
     C5["mem0 · Zep<br/>Letta (MCP)"]
   end
-  A --> B --> C
+  A x1@--> B
+  B x2@--> C
+  x1@{ animation: fast }
+  x2@{ animation: fast }
   classDef box fill:#eef4fb,stroke:#4a7fb5,stroke-width:1px,color:#1F4E79;
   class A1,A2,A3,A4,B1,B2,B3,B4,C1,C2,C3,C4,C5 box;
 ```
@@ -387,7 +488,7 @@ flowchart LR
 | 6 | 아무 모델 + mem0/Zep MCP 서버 | 아무 데나 | 프레임워크 | **MCP 뒤 어디든** | 메모리를 MCP 툴로 노출 |
 | 7 | LangGraph/LlamaIndex + Bedrock Session Mgmt API | Bedrock | **AWS(고객 계정)** | 직접 구현 | AWS가 명시한 설계 용도 |
 
-### 6.1 그래서 메모리는 어디에 쌓이는가 — 판별 규칙
+### 7.1 그래서 메모리는 어디에 쌓이는가 — 판별 규칙
 
 조합이 복잡해 보여도 판별은 세 가지 질문으로 끝난다.
 
@@ -397,7 +498,7 @@ flowchart LR
 
 이 세 개가 서로 다른 곳일 수 있다는 게 핵심이다. "메모리가 어디 있냐"는 질문에는 단일 답이 없고, **세 개의 답**이 있다.
 
-### 6.2 안티패턴 — 이중 기록(double bookkeeping)
+### 7.2 안티패턴 — 이중 기록(double bookkeeping)
 
 크로스오버에서 가장 자주 발생하는 사고는 **이력의 source of truth가 둘이 되는 것**이다.
 
@@ -411,14 +512,17 @@ flowchart LR
 - 장기 메모리(L3)는 예외다. 이건 이력이 아니라 **추출된 사실**이므로 이중이 아니다. 오히려 L0~L2 어느 조합에도 독립적으로 얹는 게 정상이다.
 </div>
 
-### 6.3 마이그레이션 관점 — 어느 조합이 갈아타기 쉬운가
+### 7.3 마이그레이션 관점 — 어느 조합이 갈아타기 쉬운가
 
 ```mermaid
 flowchart TB
   S1["<b>가장 이식성 높음</b><br/>L0 모델 API + 자체 세션 저장소 + MCP 메모리<br/>모델·클라우드 교체해도 기억이 남는다"]
   S2["<b>중간</b><br/>프레임워크 무관 런타임/메모리<br/>AgentCore · Agent Engine · Foundry BYO"]
   S3["<b>가장 락인 강함</b><br/>벤더 통합 에이전트 + 벤더 내장 메모리<br/>Managed Agents + memory_stores 등"]
-  S1 --> S2 --> S3
+  S1 p1@--> S2
+  S2 p2@--> S3
+  p1@{ animation: fast }
+  p2@{ animation: fast }
   N1["운영 부담 ↑<br/>직접 만들 게 많다"] -.-> S1
   N3["운영 부담 ↓<br/>인프라를 안 만든다"] -.-> S3
   classDef a fill:#eef4fb,stroke:#4a7fb5,color:#1F4E79;
@@ -431,9 +535,9 @@ flowchart TB
 
 ---
 
-## 7. 실무 결정 기준 — 거버넌스·비용·락인 {#sec7}
+## 8. 실무 결정 기준 — 거버넌스·비용·락인 {#sec8}
 
-### 7.1 데이터 거버넌스로 먼저 자른다
+### 8.1 데이터 거버넌스로 먼저 자른다
 
 가장 많은 선택지를 한 번에 제거하는 축이다.
 
@@ -444,7 +548,7 @@ flowchart TB
 | 특정 지리에 고정 | Azure(리소스와 동일 지리), Anthropic `inference_geo` 핀 | 지역 미지정 기본 라우팅 |
 | 감사 추적·소급 삭제 필요 | Anthropic memory versions + `redact`, AgentCore 이벤트(불변·타임스탬프) | 단순 로컬 파일 저장 |
 
-### 7.2 비용은 "저장"이 아니라 "재전송"에서 나온다
+### 8.2 비용은 "저장"이 아니라 "재전송"에서 나온다
 
 2장에서 봤듯 서버 세션은 토큰 비용을 줄이지 않는다. 실제로 비용을 움직이는 레버는 셋이다.
 
@@ -454,7 +558,7 @@ flowchart TB
 
 여기에 에이전트 계층 고유의 비용 통제 장치도 있다. Managed Agents의 `budget.max_list_cost`는 세션 단위 하드 상한이고, AgentCore Runtime의 15분 유휴 회수·8시간 상한은 컴퓨트 측 상한이다.
 
-### 7.3 선택 가이드
+### 8.3 선택 가이드
 
 | 상황 | 권장 | 이유 |
 | :--- | :--- | :--- |
@@ -468,24 +572,36 @@ flowchart TB
 
 ---
 
-## 8. 요약 치트시트 {#sec8}
+## 9. 요약 치트시트 {#sec9}
 
 ```mermaid
 flowchart TD
   Q1{"서버가 대화를<br/>보관해야 하나?"}
-  Q1 -- "아니오" --> A1["<b>L0</b><br/>Chat Completions · Messages<br/>Converse · generateContent<br/>+ 필요하면 compaction"]
-  Q1 -- "예" --> Q2{"툴 실행도<br/>서버가 하나?"}
-  Q2 -- "아니오" --> A2["<b>L1</b><br/>Responses/Conversations<br/>Interactions · Bedrock Sessions"]
-  Q2 -- "예" --> Q3{"저장소를 내가<br/>소유해야 하나?"}
-  Q3 -- "아니오" --> A3["<b>L2 벤더형</b><br/>Managed Agents<br/>Agent Engine"]
-  Q3 -- "예" --> A4["<b>L2 BYO형</b><br/>Foundry + Cosmos DB<br/>AgentCore(고객 계정)<br/>Claude Agent SDK(로컬)"]
-  A1 --> Q4
-  A2 --> Q4
-  A3 --> Q4
-  A4 --> Q4
+  Q1 d1@-- "아니오" --> A1["<b>L0</b><br/>Chat Completions · Messages<br/>Converse · generateContent<br/>+ 필요하면 compaction"]
+  Q1 d2@-- "예" --> Q2{"툴 실행도<br/>서버가 하나?"}
+  Q2 d3@-- "아니오" --> A2["<b>L1</b><br/>Responses/Conversations<br/>Interactions · Bedrock Sessions"]
+  Q2 d4@-- "예" --> Q3{"저장소를 내가<br/>소유해야 하나?"}
+  Q3 d5@-- "아니오" --> A3["<b>L2 벤더형</b><br/>Managed Agents<br/>Agent Engine"]
+  Q3 d6@-- "예" --> A4["<b>L2 BYO형</b><br/>Foundry + Cosmos DB<br/>AgentCore(고객 계정)<br/>Claude Agent SDK(로컬)"]
+  A1 d7@--> Q4
+  A2 d8@--> Q4
+  A3 d9@--> Q4
+  A4 d10@--> Q4
   Q4{"세션을 넘어<br/>기억해야 하나?"}
-  Q4 -- "예" --> A5["<b>L3 추가</b><br/>AgentCore Memory · Memory Bank<br/>memory_stores · mem0/Zep/Letta"]
-  Q4 -- "아니오" --> A6["끝. 세션 종료 시 소멸"]
+  Q4 d11@-- "예" --> A5["<b>L3 추가</b><br/>AgentCore Memory · Memory Bank<br/>memory_stores · mem0/Zep/Letta"]
+  Q4 d12@-- "아니오" --> A6["끝. 세션 종료 시 소멸"]
+  d1@{ animation: fast }
+  d2@{ animation: fast }
+  d3@{ animation: fast }
+  d4@{ animation: fast }
+  d5@{ animation: fast }
+  d6@{ animation: fast }
+  d7@{ animation: fast }
+  d8@{ animation: fast }
+  d9@{ animation: fast }
+  d10@{ animation: fast }
+  d11@{ animation: fast }
+  d12@{ animation: fast }
   classDef q fill:#f7f3fa,stroke:#8a6fae,color:#3d2a55;
   classDef a fill:#eef4fb,stroke:#4a7fb5,color:#1F4E79;
   class Q1,Q2,Q3,Q4 q;
@@ -502,7 +618,7 @@ flowchart TD
 
 ---
 
-## 9. 참고문헌 {#sec9}
+## 10. 참고문헌 {#sec10}
 
 > 상세 목록은 [model-agent-api-session-memory-references.xlsx](./model-agent-api-session-memory-references.xlsx) 참고.
 
@@ -547,15 +663,24 @@ flowchart TD
 - BYO Thread Storage (Cosmos DB) — https://devblogs.microsoft.com/cosmosdb/azure-ai-foundry-connection-for-azure-cosmos-db-and-byo-thread-storage-in-azure-ai-agent-service/
 - Standard agent setup — https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/standard-agent-setup
 
+**샌드박스 / 코드 실행 (6장)**
+- Anthropic, *Code execution tool* — https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool
+- OpenAI, *Code Interpreter* — https://developers.openai.com/api/docs/guides/tools-code-interpreter
+- Anthropic, *Code execution with MCP* — https://www.anthropic.com/engineering/code-execution-with-mcp
+- Cloudflare, *Code Mode: the better way to use MCP* — https://blog.cloudflare.com/code-mode/
+- AWS, *Use isolated sessions for agents (AgentCore Runtime)* — https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html
+- Anthropic, *Self-hosted sandboxes* — https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes
+- 샌드박스 플랫폼 비교 (2026) — Northflank · Modal · Blaxel 등 벤더 블로그 (2차 출처)
+
 **서드파티 메모리**
 - mem0 — https://mem0.ai/blog/mem0-vs-zep · Zep(Graphiti) · Letta(구 MemGPT)
 - MemGPT 논문 — https://arxiv.org/abs/2310.08560
 
-> **소싱 노트**: 본 리서치는 각 벤더의 공식 문서를 우선 출처로 삼았고(Anthropic·AWS·Google·Microsoft·OpenAI 공식 docs 직접 조회), 일부 항목은 검색 결과가 노출한 문서 발췌에 의존했다. 특히 (1) Azure의 Conversations 엔드포인트 가용성, (2) 서드파티 메모리 제품들의 2026년 기능 현황 — 이 둘은 벤더/리전별 편차가 커서 도입 전 실제 배포 환경에서 재확인을 권한다. 베타 헤더와 API 이름은 2026년 9월 기준이며 베타 단계 기능은 변경될 수 있다.
+> **소싱 노트**: 본 리서치는 각 벤더의 공식 문서를 우선 출처로 삼았고(Anthropic·AWS·Google·Microsoft·OpenAI 공식 docs 직접 조회), 일부 항목은 검색 결과가 노출한 문서 발췌에 의존했다. 특히 (1) Azure의 Conversations 엔드포인트 가용성, (2) 서드파티 메모리 제품들의 2026년 기능 현황, (3) 6.4절의 토큰 절감 수치(Anthropic 150k→2k, Cloudflare 1.17M→~1k) — 이 셋은 벤더/리전별 편차가 크거나 2차 매체 인용을 거쳤으므로, 도입 판단이나 재인용 전에 원문 대조를 권한다. 베타 헤더와 API 이름은 2026년 9월 기준이며 베타 단계 기능은 변경될 수 있다.
 
 ---
 
-## 10. 🧠 학습 퀴즈 {#sec10}
+## 11. 🧠 학습 퀴즈 {#sec11}
 
 **Q1.** OpenAI Responses API에서 `previous_response_id`로 대화를 이어붙이면, 앱이 새 질문만 보내므로 입력 토큰 비용이 절감된다. (O/X)
 
@@ -620,6 +745,26 @@ flowchart TD
 2. **Bedrock AgentCore를 고객 AWS 계정에서 운영** — Runtime의 microVM과 Memory 리소스가 고객 계정 안에 있다.
 
 보조적으로 **Claude Managed Agents의 self-hosted sandbox**도 있다. 다만 이 경우 툴 실행만 자체 인프라로 옮겨지고 **에이전트 루프·컨텍스트 관리는 Anthropic 인프라에 남으며**, Managed Agents 자체는 ZDR·HIPAA BAA 적용 대상이 아니다. 조건이 "모든 데이터"라면 1·2번이 정답이다.
+</details>
+
+**Q9.** OpenAI Conversations API로 대화를 유지하면서 code interpreter로 CSV를 만들었다. 다음 날 같은 대화를 이어가며 그 파일을 읽으려 했더니 실패한다. 왜인가?
+
+<details markdown="1"><summary>정답</summary>
+
+**샌드박스 수명과 세션 수명이 다른 주체에 의해 관리되기 때문이다.** Conversation 객체는 응답의 30일 TTL조차 적용되지 않아 오래 남지만, code interpreter 컨테이너는 **20분간 사용되지 않으면 만료**되고 만료 시 컨테이너 데이터는 폐기되어 복구할 수 없다. `container: "auto"` + `previous_response_id` 조합은 원 컨테이너가 만료되면 호출 자체가 실패한다.
+
+공식 권고대로 **컨테이너를 ephemeral로 취급하고 산출물은 만들자마자 자체 스토리지로 꺼내야** 한다.
+</details>
+
+**Q10.** 코드를 한 줄도 산출물로 내놓지 않는 업무용 에이전트인데도 샌드박스를 쓰는 대표적 이유는?
+
+<details markdown="1"><summary>정답</summary>
+
+**툴 오케스트레이션 수단으로 쓰기 위해서다.** 모델이 툴을 하나씩 function calling으로 부르는 대신 짧은 프로그램을 작성해 여러 툴을 엮으면, **중간 데이터가 컨텍스트에 들어오지 않고 최종 결과만** 돌아온다. Anthropic이 보고한 Google Drive → Salesforce 사례에서 150,000 토큰이 2,000 토큰으로(약 98.7% 감소) 줄었다.
+
+즉 목적은 컨텍스트 경제이고 샌드박스는 수단이다. 2장의 "서버 세션은 토큰을 아껴주지 않는다"에 대한 실질적 우회로이기도 하다 — 아껴주는 건 **중간 결과를 컨텍스트 밖에 두는 것**이다.
+
+(부수적 이유 둘: 데이터 분석·리포팅처럼 계산·차트·파일 생성이 목적인 경우, 그리고 에이전트가 생성한 코드가 본질적으로 untrusted라 격리가 필요한 경우.)
 </details>
 
 ---
