@@ -541,6 +541,24 @@ flowchart TB
 
 가장 많은 선택지를 한 번에 제거하는 축이다.
 
+<div class="callout callout-key" markdown="1">
+**먼저 용어 — ZDR과 HIPAA BAA** [\[55\]](#ref55){:.cite}
+
+**ZDR(Zero Data Retention)** 은 "API 응답을 돌려준 뒤 벤더가 프롬프트·응답을 저장하지 않는다"는 계약이다. 기본값이 아니라 **조직 단위로 신청해 활성화**하며, 같은 계정 산하의 새 조직에 자동으로 확장되지 않는다.
+
+**HIPAA BAA**는 다르다. HIPAA는 미국 의료정보보호법이고, BAA(Business Associate Agreement)는 PHI(보호대상 건강정보)를 대신 처리하는 업체가 그 의무를 지겠다고 서명하는 **법적 계약**이다. PHI를 외부 서비스로 보내려면 법적으로 필수다.
+
+| | ZDR | HIPAA readiness |
+| :--- | :--- | :--- |
+| 접근 방식 | 아예 저장하지 않음 | 저장하되 수명주기 전체에 보호장치(암호화·접근통제·감사 로깅) |
+| 미적격 기능을 쓰면 | 차단하지 않음 — 그 데이터만 ZDR 밖으로 나가고 해당 기능의 보존 정책이 적용 | 요청을 `400`으로 차단 |
+| 언제 | 데이터가 남는 것 자체가 문제일 때 | PHI를 다룰 때 |
+
+둘은 위아래 관계가 아니다. 공식 문서는 **PHI를 다룬다면 HIPAA readiness를 쓰면 되고 ZDR을 별도로 할 필요는 없다**고 적는다.
+
+이 글의 주장들은 Anthropic의 기능별 적격성 표와 일치한다. Messages API·**context editing**·**compaction**·memory tool은 ZDR **적격**이고, **Managed Agents와 code execution은 비적격**이다. 3.2절에서 말한 "compaction은 저장 주체를 클라이언트에 남기므로 ZDR을 유지할 수 있다"가 추측이 아니라는 뜻이고, Managed Agents가 빠지는 이유도 문서에 명시돼 있다 — **stateful 리소스라서 세션 트랜스크립트가 삭제 전까지 남기 때문**이다.
+</div>
+
 | 요구사항 | 가능한 선택 | 불가능한 선택 |
 | :--- | :--- | :--- |
 | Zero Data Retention 필수 | L0 모델 API(+compaction), 자체 세션 저장 | Claude Managed Agents(공식 비적용), 서버 저장 모드 전반 |
@@ -743,6 +761,10 @@ flowchart TD
 <span id="ref53"></span>**[53]** Self-hosted sandboxes — Anthropic 공식 문서 · [https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes](https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes)
 
 <span id="ref54"></span>**[54]** Best Code Execution Sandboxes for AI Agents (2026) — Modal · Northflank · Blaxel 등 벤더 블로그 (2차 출처) · [https://modal.com/resources/best-code-execution-sandboxes-ai-agents](https://modal.com/resources/best-code-execution-sandboxes-ai-agents)
+
+**데이터 보존 / 컴플라이언스**
+
+<span id="ref55"></span>**[55]** API and data retention — ZDR·HIPAA readiness 및 기능별 적격성 표 — Anthropic 공식 문서 · [https://platform.claude.com/docs/en/manage-claude/api-and-data-retention](https://platform.claude.com/docs/en/manage-claude/api-and-data-retention)
 > **소싱 노트**: 본 리서치는 각 벤더의 공식 문서를 우선 출처로 삼았고(Anthropic·AWS·Google·Microsoft·OpenAI 공식 docs 직접 조회), 일부 항목은 검색 결과가 노출한 문서 발췌에 의존했다. 특히 (1) Azure의 Conversations 엔드포인트 가용성, (2) 서드파티 메모리 제품들의 2026년 기능 현황, (3) 6.4절의 토큰 절감 수치(Anthropic 150k→2k, Cloudflare 1.17M→~1k) — 이 셋은 벤더/리전별 편차가 크거나 2차 매체 인용을 거쳤으므로, 도입 판단이나 재인용 전에 원문 대조를 권한다. 베타 헤더와 API 이름은 2026년 9월 기준이며 베타 단계 기능은 변경될 수 있다.
 
 ---
