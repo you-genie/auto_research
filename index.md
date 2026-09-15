@@ -31,6 +31,7 @@ AI Python 개발자로, 빠르게 변화하는 AI 생태계의 최신 트렌드�
 
 | 날짜 | 제목 |
 |------|------|
+| 2026-09-15 | [에이전트 샌드박스 내부 해부: 격리 단위·구현 언어·동시성 (2026)](2026-09-15-agent-sandbox-internals/agent-sandbox-internals-blog) |
 | 2026-09-15 | [누가 대화를 기억하는가: 상용 모델 API와 에이전트 API의 세션·메모리 소유권 전면 비교 (2026)](2026-09-15-model-agent-api-session-memory/model-agent-api-session-memory-blog) |
 | 2026-05-19 | [LLM 학습 프레임워크 완전 정복: 2025~2026 기업별 채택 현황 & 규모별 가이드](2026-05-19-llm-training-frameworks/llm-training-frameworks-blog) |
 
