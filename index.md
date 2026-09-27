@@ -19,6 +19,12 @@ AI Python 개발자로, 빠르게 변화하는 AI 생태계의 최신 트렌드�
 
 ## Recent Posts
 
+### Trend Briefing (트렌드 브리핑)
+
+| 날짜 | 제목 |
+|------|------|
+| 2026-09-27 | [트렌드 브리핑: 트렌딩 키워드·GitHub 레포·주목 기술·24시간 뉴스 종합](research-reports/trend-briefing-2026-09-27) |
+
 ### AI Safety, Governance & Culture
 
 | 날짜 | 제목 |
