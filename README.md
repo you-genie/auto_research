@@ -23,6 +23,7 @@ Claude Code의 research-producer 에이전트를 활용하여 최신 AI 트렌�
 
 | 날짜 | 주제 | 산출물 |
 |------|------|--------|
+| 2026-10-23 | [OpenIntelligentUI 서베이: ChatGPT Intelligent UI의 오픈소스 재현과 생성형 UI 포맷 전쟁 (2026)](2026-10-23-open-intelligent-ui/) | 블로그, PPT, 참고문헌 |
 | 2026-07-24 | [요즘 에이전트, 진짜로 뭘로 만들어지나 — '가장 복잡한 에이전트'를 상정한 구성요소 전면 해부 (하네스/컨텍스트 엔지니어링/MCP/스킬/메모리/플래닝/멀티에이전트/평가·가드레일/상용 스택)](2026-07-24-agent-architecture/) | 블로그, PPT, 참고문헌 |
 | 2025 | [AI World Models: 환각하는 에이전트에서 실시간 현실 시뮬레이션까지](world_models/) | 블로그, 논문DB |
 | 2025 | [Claude Skills: AI 에이전트의 프로그래밍 가능한 미래](claude_skills/) | 블로그, 논문DB, PPT |
@@ -31,6 +32,7 @@ Claude Code의 research-producer 에이전트를 활용하여 최신 AI 트렌�
 
 | 날짜 | 주제 | 산출물 |
 |------|------|--------|
+| 2026-10-23 | [Jev와 System One 모델 해부: 선택·판단 전용 모델의 입출력 사양과 실행 방식 (2026)](2026-10-23-jev-decision-models/) | 블로그, PPT, 참고문헌 |
 | 2026-07-24 | [이미지·비디오 생성의 Consistency 완전 정복 (DreamBooth·IP-Adapter·ConsiStory / AnimateDiff·Sora·DiT / Consistency Models 구분)](2026-07-24-image-video-consistency/) | 블로그, 참고문헌 |
 
 ### Development

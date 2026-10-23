@@ -59,6 +59,7 @@ AI Python 개발자로, 빠르게 변화하는 AI 생태계의 최신 트렌드�
 
 | 날짜 | 제목 |
 |------|------|
+| 2026-10-23 | [Jev와 System One 모델 해부: 선택·판단 전용 모델의 입출력 사양과 실행 방식 (2026)](2026-10-23-jev-decision-models/jev-decision-models-blog) |
 | 2026-07-24 | [같은 얼굴, 안 흔들리는 화면: 이미지·비디오 생성의 Consistency 완전 정복 (2022~2026)](2026-07-24-image-video-consistency/image-video-consistency-blog) |
 | 2026-06-29 | [VLM은 "내 취향"을 알고 있을까? — 개인화 이미지 미학 평가의 새 패러다임 (Findings of ACL 2026)](2026-06-29-vlm-piaa/vlm-piaa-blog) |
 | 2026-06-29 | [말과 손짓으로 "그거" 알아듣기 — Co-Speech Gesture 기반 지시어 해소 (Findings of ACL 2025)](2026-06-29-co-speech-gesture-reference/co-speech-gesture-reference-blog) |
@@ -71,6 +72,7 @@ AI Python 개발자로, 빠르게 변화하는 AI 생태계의 최신 트렌드�
 
 | 날짜 | 제목 |
 |------|------|
+| 2026-10-23 | [OpenIntelligentUI 서베이: ChatGPT Intelligent UI의 오픈소스 재현과 생성형 UI 포맷 전쟁 (2026)](2026-10-23-open-intelligent-ui/open-intelligent-ui-blog) |
 | 2026-07-24 | [요즘 에이전트, 진짜로 뭘로 만들어지나 — '가장 복잡한 에이전트'를 상정한 구성요소 전면 해부 (하네스·컨텍스트 엔지니어링·MCP·스킬·메모리·플래닝·멀티에이전트·평가/가드레일·상용 스택)](2026-07-24-agent-architecture/agent-architecture-blog) |
 | 2026-07-13 | [IntellAgent 완전 정복: 정책 그래프로 대화형 에이전트의 숨은 취약점을 찾아내는 법](2026-07-13-intellagent/intellagent-blog) |
 | 2026-06-23 | [LLM이 인간처럼 판단할 수 있을까? — Judge's Verdict 논문 완전 분석](2026-06-23-judges-verdict/judges-verdict-blog) |
