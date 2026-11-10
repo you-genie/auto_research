@@ -13,6 +13,12 @@ Claude Code의 research-producer 에이전트를 활용하여 최신 AI 트렌�
 
 ## 리서치 목록
 
+### Daily Trends
+
+| 날짜 | 주제 | 산출물 |
+|------|------|--------|
+| 2026-11-10 | [데일리 트렌드 리포트: Claude Fable 5.2 · Anthropic IPO · DeepMind RSA-1024 · 오픈웨이트 동향](2026-11-10-daily-trend-report/) | 블로그 |
+
 ### AI Safety & Alignment
 
 | 날짜 | 주제 | 산출물 |

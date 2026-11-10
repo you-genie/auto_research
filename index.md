@@ -19,6 +19,12 @@ AI Python 개발자로, 빠르게 변화하는 AI 생태계의 최신 트렌드�
 
 ## Recent Posts
 
+### Daily Trends
+
+| 날짜 | 제목 |
+|------|------|
+| 2026-11-10 | [데일리 트렌드 리포트 (2026-11-10): Claude Fable 5.2 · Anthropic IPO · DeepMind RSA-1024 · 오픈웨이트 동향](2026-11-10-daily-trend-report/daily-trend-report-blog) |
+
 ### AI Safety, Governance & Culture
 
 | 날짜 | 제목 |
